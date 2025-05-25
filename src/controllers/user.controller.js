@@ -23,6 +23,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
    }
 }
 
+// register
 const registerUser = asyncHandler(async (req, res) => {
 
    // taking user detail
@@ -100,9 +101,7 @@ const registerUser = asyncHandler(async (req, res) => {
 })
 
 
-
 // login
-
 const loginUser = asyncHandler(async (req, res) => {
 
    // take username, pass
@@ -150,7 +149,37 @@ const loginUser = asyncHandler(async (req, res) => {
       );
 });
 
+// logout 
+const logoutUser = asyncHandler(async (req, res) => {
+   await User.findByIdAndUpdate(
+      req.user._id,
+      {
+         $unset: {
+            refreshToken: 1    
+         }
+      },
+      {
+         new: true
+      }
+   )
+
+   const options = {
+   httpOnly: true,      // optios help is making cookies only accessible through http route
+   secure: true
+};
+
+   return res
+      .status(200)
+      .clearCookie("accessToken", options)
+      .clearCookie("refreshToken", options)
+      .json(new ApiResponse(200, {}, "User logged out successfully"))
+
+})
+
+
+
 export {
    registerUser,
-   loginUser
+   loginUser,
+   logoutUser
 };
