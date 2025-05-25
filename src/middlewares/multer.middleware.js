@@ -19,7 +19,7 @@ export const uploadPfp = multer({
 
  // for pics in tweets
 const mediaStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "./public/tweetPics"),
+  destination: (req, file, cb) => cb(null, "./public/temp"),
   filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
 
