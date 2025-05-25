@@ -47,7 +47,7 @@ const userSchema = new Schema(
 // using bcrypt for hashing passwords
 userSchema.pre("save", async function (next) {        // async is for the time it takes, bro its cryptography hehe
   if (!this.isModified("password")) return next();     // yaha we checked for negative
-  
+
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
@@ -62,6 +62,21 @@ userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password)
 }
 
+// for genrating tokens <3
+userSchema.methods.generateAccessToken = function () {
+  return jwt.sign(
+    { _id: this._id, email: this.email },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+  );
+};
 
+userSchema.methods.generateRefreshToken = function () {
+  return jwt.sign(
+    { _id: this._id },
+    process.env.REFRESH_TOKEN_SECRET,
+    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
+  );
+};
 
 export const User = mongoose.model("User", userSchema)
