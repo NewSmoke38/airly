@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { User } from "../models/user.model.js";
 
 
 // create a tweet
@@ -12,6 +13,8 @@ import mongoose from "mongoose";
 const createTweet = asyncHandler(async (req, res) => {
     const { title, content } = req.body;
 
+
+console.log("req.user:", req.user);
     // Validate required fields
     if (!title || !content) {
         throw new ApiError(400, "Title and content are required");
@@ -34,7 +37,8 @@ const createTweet = asyncHandler(async (req, res) => {
         title,
         content,
         media: mediaUrl,
-        user: req.user._id   // <-- associate tweet with the authenticated user   
+        user: req.user._id.toString()   // <-- associate tweet with the authenticated user  
+         
     });
     return res
     .status(201)
@@ -55,6 +59,9 @@ const deleteTweet = asyncHandler(async (req, res) => {
     }
 
     // Check if the logged-in user is the owner
+    if (!tweet.user || !req.user || !req.user._id) {
+    throw new ApiError(403, "Not authorized or tweet/user missing");
+} 
     if (tweet.user.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You are not authorized to delete this tweet");
     }
@@ -62,7 +69,9 @@ const deleteTweet = asyncHandler(async (req, res) => {
     // Delete the tweet
     await tweet.deleteOne();
 
-    return res.status(200).json(
+    return res
+    .status(200)
+    .json(
         new ApiResponse(200, {}, "Tweet deleted successfully")
     );
 });
@@ -72,6 +81,3 @@ export {
     deleteTweet
 }
 
-export {
-    createTweet
-}

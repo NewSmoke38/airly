@@ -15,7 +15,12 @@ const tweetSchema = new Schema(
             required: true,
             trim: true,           // removes leading/trailing whitespace
             maxlength: 280,       // limit to 280 characters (like Twitter)
-            minlength: 1,  
+            minlength: 1 
+        },
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true
         }
     },
     {
@@ -23,4 +28,4 @@ const tweetSchema = new Schema(
     }
 )
 
-export const Tweet = mongoose.model("Tweet", tweetSchema)
+export const Tweet = mongoose.model("Tweet", tweetSchema);

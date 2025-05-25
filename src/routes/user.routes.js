@@ -4,7 +4,11 @@ import {
          loginUser,
          logoutUser 
         } from "../controllers/user.controller.js";
-import { createTweet } from "../controllers/tweet.controller.js"
+
+import { createTweet,
+         deleteTweet
+        } from "../controllers/tweet.controller.js"
+
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { uploadPfp } from "../middlewares/multer.middleware.js";
 import { uploadMedia } from "../middlewares/multer.middleware.js";
@@ -22,5 +26,7 @@ router.route("/register").post(
 
 router.route("/login").post(loginUser)
 router.route("/logout").post(verifyJWT, logoutUser)
-router.route("/tweet").post(verifyJWT, uploadMedia.single("media"), createTweet);
+router.post("/tweet", verifyJWT, uploadMedia.single("media"), createTweet);
+router.delete("/tweet/:id", verifyJWT, deleteTweet);
+
 export default router;
