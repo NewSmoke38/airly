@@ -1,7 +1,7 @@
-import multer from "multer"
+import multer from "multer";
 
-
-const storage = multer.diskStorage({
+// for pfp media in user profile
+const pfpStorage = multer.diskStorage({
   destination: function (req, file, cb) {     
     cb(null, "./public/temp")
   },
@@ -11,7 +11,19 @@ const storage = multer.diskStorage({
   }
 })
 
-export const upload = multer({ 
-    storage
+export const uploadPfp = multer({ 
+    storage: pfpStorage,
+     limits: { fileSize: 1 * 1024 * 1024 } // 1 mb limit
  })
 
+
+ // for pics in tweets
+const mediaStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, "./public/tweetPics"),
+  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+});
+
+export const uploadMedia = multer({
+  storage: mediaStorage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10 MB limit
+});
