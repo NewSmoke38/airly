@@ -67,19 +67,13 @@ const registerUser = asyncHandler(async (req, res) => {
       throw new ApiError(400, "pfp file is required")
    }
    
-   if (!password || password.length < 6 || password.length > 8) {
-   throw new ApiError(400, "Password must be between 6 and 8 characters");
-   }
-   const bcrypt = await import('bcrypt');
-   const hashedPassword = await bcrypt.default.hash(password, 10);
-   
    // enter user into db, make a user object there
    // when playing w db we often get errors, so async will handle it, so we must await kyunki bhai time to lagega hi
    const user = await User.create({
       fullName,
       pfp: pfp.url,
       email,
-      password: hashedPassword,           
+      password,          
       username: username.toLowerCase()  
    })
 
