@@ -10,7 +10,9 @@ const userSchema = new Schema(
         unique: true,
         lowercase: true,
         trim: true,
-        index: true
+        index: true,
+        minlength: 1,
+        maxlength: 30
     },
     email: {
         type: String,
@@ -18,20 +20,36 @@ const userSchema = new Schema(
         unique: true,
         lowercase: true,
         trim: true,
+        match: [/^\S+@\S+\.\S+$/, "Please enter a valid email address"]
     },
     password: {
         type: String,
-        required: [true, 'Password is required']
+        required: [true, 'Password is required'],
+        minlength: 6,
+        maxlength: 8
     },
     fullName: {
       type: String,
       required: true,
       trim: true,            // it automatically removes whitespace 
-      index: true
+      index: true,
+      minlength: 1,
+      maxlength: 30
     },
     pfp: {
         type: String,     // we will take its url from cloudinary
         required: true
+    },
+    social: {
+        twitter: {
+        type: String
+     },
+        github: { 
+        type: String
+     },
+        linkedin: {
+        type: String 
+     }
     },
     refreshToken: {
       type: String,
