@@ -4,7 +4,8 @@ import {
          loginUser,
          logoutUser,
          getOwnProfile,
-         updateUserSocials 
+         updateUserSocials,
+         updateUserInfo 
         } from "../controllers/user.controller.js";
 
 import { createTweet,
@@ -28,13 +29,13 @@ router.route("/register").post(
     ]),
     registerUser)  
 
-router.route("/login").post(loginUser)
-router.route("/logout").post(verifyJWT, logoutUser)
+router.post("/login", loginUser)
+router.post("/logout", verifyJWT, logoutUser)
 router.post("/tweet", verifyJWT, uploadMedia.single("media"), createTweet);
 router.delete("/tweet/:id", verifyJWT, deleteTweet);
 router.post("/tweet/:id/like", verifyJWT, likeTweet);
 router.patch("/tweet/:id", verifyJWT, uploadMedia.single("media"), editTweet);
 router.get("/me", verifyJWT, getOwnProfile);
 router.patch("/socials", verifyJWT, updateUserSocials);
-
+router.patch("/personal", verifyJWT, uploadPfp.single("pfp"), updateUserInfo);
 export default router;
