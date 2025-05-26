@@ -6,7 +6,8 @@ import {
         } from "../controllers/user.controller.js";
 
 import { createTweet,
-         deleteTweet
+         deleteTweet,
+         editTweet
         } from "../controllers/tweet.controller.js"
 
 import { likeTweet } from "../controllers/like.controller.js";
@@ -30,4 +31,5 @@ router.route("/logout").post(verifyJWT, logoutUser)
 router.post("/tweet", verifyJWT, uploadMedia.single("media"), createTweet);
 router.delete("/tweet/:id", verifyJWT, deleteTweet);
 router.post("/tweet/:id/like", verifyJWT, likeTweet);
+router.patch("/tweet/:id", verifyJWT, uploadMedia.single("media"), editTweet);
 export default router;

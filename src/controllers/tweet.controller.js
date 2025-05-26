@@ -5,11 +5,9 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import { User } from "../models/user.model.js";
 
 
 // create a tweet
-
 const createTweet = asyncHandler(async (req, res) => {
     const { title, content } = req.body;
 
@@ -76,8 +74,43 @@ const deleteTweet = asyncHandler(async (req, res) => {
     );
 });
 
+
+// edit a tweet
+const editTweet = asyncHandler(async (req, res) => {
+    const tweetId = req.params.id;
+    const { title, content } = req.body;
+
+    // Find the tweet
+    const tweet = await Tweet.findById(tweetId);
+    if (!tweet) {
+        throw new ApiError(404, "Tweet not found");
+    }
+
+    // Only the owner can edit
+    if (!tweet.user || tweet.user.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to edit this tweet");
+    }
+
+    // Update fields if provided
+    if (title) tweet.title = title;
+    if (content) tweet.content = content;
+
+    // Add watermark
+    tweet.edited = true;
+    tweet.editedAt = new Date();
+
+    await tweet.save();
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, tweet, "Tweet edited successfully")
+    );
+});
+
 export {
     createTweet,
-    deleteTweet
+    deleteTweet,
+    editTweet
 }
 

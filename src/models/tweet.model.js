@@ -23,12 +23,22 @@ const tweetSchema = new Schema(
             required: true
         },
        
-            likes: [
-              { type: Schema.Types.ObjectId,
-                ref: "User",
-                default: []
-             }
-]
+        likes: [
+          { type: Schema.Types.ObjectId,
+            ref: "User",
+            default: []
+          }
+        ],
+
+        edited: {
+            type: Boolean,   
+            default: false
+          },
+
+        editedAt: {
+        type: Date
+},
+
     },
     {
         timestamps: true
