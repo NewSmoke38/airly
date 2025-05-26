@@ -176,10 +176,53 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 })
 
+// Getting logged-in user's profile
+const getOwnProfile = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id).select("-password -refreshToken");
 
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, user, "User profile fetched successfully")
+    );
+});
+
+
+// Updatig user's own socials
+const updateUserSocials = asyncHandler(async (req, res) => {
+    const socials = req.body.social; // like - twitter, github, linkedin
+
+    // If socials is missing or not an object, just skip updating and return current user
+    if (!socials || typeof socials !== "object" || Object.keys(socials).length === 0) {
+        const user = await User.findById(req.user._id).select("-password -refreshToken");
+        return res.status(200).json(
+            new ApiResponse(200, user, "No social links updated (none provided)")
+        );
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: { social: socials } },
+        { new: true, runValidators: true, select: "-password -refreshToken" }
+    );
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, user, "Social links updated successfully")
+    );
+});
 
 export {
    registerUser,
    loginUser,
-   logoutUser
+   logoutUser,
+   getOwnProfile,
+   updateUserSocials
 };

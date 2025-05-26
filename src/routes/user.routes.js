@@ -2,7 +2,9 @@ import { Router } from "express";
 import { 
          registerUser,
          loginUser,
-         logoutUser 
+         logoutUser,
+         getOwnProfile,
+         updateUserSocials 
         } from "../controllers/user.controller.js";
 
 import { createTweet,
@@ -32,4 +34,7 @@ router.post("/tweet", verifyJWT, uploadMedia.single("media"), createTweet);
 router.delete("/tweet/:id", verifyJWT, deleteTweet);
 router.post("/tweet/:id/like", verifyJWT, likeTweet);
 router.patch("/tweet/:id", verifyJWT, uploadMedia.single("media"), editTweet);
+router.get("/me", verifyJWT, getOwnProfile);
+router.patch("/socials", verifyJWT, updateUserSocials);
+
 export default router;

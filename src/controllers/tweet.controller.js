@@ -77,7 +77,7 @@ const deleteTweet = asyncHandler(async (req, res) => {
 
 // edit a tweet
 const editTweet = asyncHandler(async (req, res) => {
-    const tweetId = req.params.id;
+    const tweetId = req.params.id;      // Get tweet ID from URL params
     const { title, content } = req.body;
 
     // Find the tweet
@@ -94,6 +94,11 @@ const editTweet = asyncHandler(async (req, res) => {
     // Update fields if provided
     if (title) tweet.title = title;
     if (content) tweet.content = content;
+    // Handle media update if a new file is uploaded
+    if (req.file) {
+        const uploadResult = await uploadOnCloudinary(req.file.path);
+        tweet.media = uploadResult.url;
+    }
 
     // Add watermark
     tweet.edited = true;
