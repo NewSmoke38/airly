@@ -30,5 +30,7 @@ const startServer = async () => {
 
 startServer();
 
-
+app.get('/', (req, res) => {
+  res.send('Yo, backend is live! Welcome to the API.');
+});
 
