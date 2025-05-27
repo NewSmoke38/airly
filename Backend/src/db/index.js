@@ -6,7 +6,7 @@ const connectDB = async () => {
     try {
         const connectionInstance = await mongoose.connect
         (`${process.env.MONGODB_URI}/${"Vibely"}`)
-        console.log(`\nMongoDB connected !! DB HOST:
+        console.log(`\nMongoDB connected yayyyy !! 
             ${connectionInstance.connection.host}`);
         
     } catch (error) {
