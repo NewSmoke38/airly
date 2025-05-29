@@ -40,7 +40,7 @@ const userSchema = new Schema(
         type: String,     // we will take its url from cloudinary
         required: true
     },
-    social: {
+    socials: {
         twitter: {
         type: String
      },
@@ -53,6 +53,11 @@ const userSchema = new Schema(
     },
     refreshToken: {
       type: String,
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user"
     }
 
 },

@@ -13,7 +13,7 @@ const pfpStorage = multer.diskStorage({
 
 export const uploadPfp = multer({ 
     storage: pfpStorage,
-     limits: { fileSize: 1 * 1024 * 1024 } // 1 mb limit
+     limits: { fileSize: 3 * 1024 * 1024 } // 3 mb limit
  })
 
 

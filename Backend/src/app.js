@@ -23,6 +23,15 @@ app.use(express.static("public"))
 
 app.use(cookieParser())
 
+// for pfp being too large 
+app.use((err, req, res, next) => {
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({ message: "Profile picture too large. Max 3MB allowed." });
+  }
+
+  // let other errors pass through
+  next(err);
+});
 
 
 // routes import

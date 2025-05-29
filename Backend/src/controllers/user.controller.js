@@ -6,6 +6,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
+const DEFAULT_ROLE = "user";
+
 
 const generateAccessAndRefreshTokens = async (userId) => {
    try {
@@ -74,8 +76,9 @@ const registerUser = asyncHandler(async (req, res) => {
       pfp: pfp.url,
       email,
       password,          
-      username: username.toLowerCase()  
-   })
+      username: username.toLowerCase(),
+      role: DEFAULT_ROLE
+   });
 
 
    // check if user object created
@@ -93,7 +96,7 @@ const registerUser = asyncHandler(async (req, res) => {
    return res
    .status(201)
    .json(
-      new ApiResponse(200, createdUser, "User registered successfully!! ✨")
+      new ApiResponse(201, createdUser, "User registered successfully!! ✨")
    )
 
 
