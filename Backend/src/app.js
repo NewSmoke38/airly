@@ -6,7 +6,11 @@ import cookieParser from "cookie-parser"
 
 const app = express();
 
-// ...existing middleware, routes, etc...
+// CORS Configuration
+app.use(cors({
+    origin: "http://localhost:3000",
+    credentials: true
+}));
 
 // here we set a limit to how much JSON we can recieve 
 app.use(express.json({limit: "16kb"}))    // middleware is needed for JSON 
@@ -37,4 +41,4 @@ app.use("/api/v1/users", userRouter);
 
 
 
-export default app; 
+export default app;
