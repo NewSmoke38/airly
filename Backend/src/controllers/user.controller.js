@@ -353,15 +353,6 @@ const updateUserById = asyncHandler(async (req, res) => {
         }
     }
 
-    if (username) {
-        const existingUser = await User.findOne({ 
-            username: username.toLowerCase(), 
-            _id: { $ne: id } 
-        });
-        if (existingUser) {
-            throw new ApiError(409, "Username already taken");
-        }
-    }
 
     const updatedUser = await User.findByIdAndUpdate(
         id,
