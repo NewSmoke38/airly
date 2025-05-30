@@ -294,7 +294,7 @@ const updateUserInfo = asyncHandler(async (req, res) => {
     );
 });
 
-// getting all users (for admin only)
+// fetching all users (admin only)
 const getAllUsers = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page) || 1;        // its how many pages, default is 1, Backend uses page & limit for infinite scroll even if UI has no visible pages so the system doesnt melt when the user req GET and we give all 1k users at one time suddenly
   const limit = parseInt(req.query.limit) || 10;     // its how many users to show per page (default is 10 if not passed by frontend).
@@ -324,6 +324,66 @@ const getAllUsers = asyncHandler(async (req, res) => {
         "Fetched users successfully"
       )
     );
+    
+});
+
+// update user by id (admin only)
+const updateUserById = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { fullName, email, role } = req.body;
+    let updateObj = {};  // we make an empty object in which we put the params we need to update 
+
+    // If the ID looks weird or fake (not a proper MongoDB ID), we throw an error 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new ApiError(400, "Invalid user ID");
+    }
+
+   updateObj.fullName = fullName;
+   updateObj.email = email.toLowerCase();
+   updateObj.role = role;
+
+    // Checks for duplicate email if being updated
+    if (email) {
+        const existingUser = await User.findOne({ 
+            email: email.toLowerCase(), 
+            _id: { $ne: id } 
+        });
+        if (existingUser) {
+            throw new ApiError(409, "Email already in use");
+        }
+    }
+
+    if (username) {
+        const existingUser = await User.findOne({ 
+            username: username.toLowerCase(), 
+            _id: { $ne: id } 
+        });
+        if (existingUser) {
+            throw new ApiError(409, "Username already taken");
+        }
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+        id,
+        {
+            $set: updateObj       //  only update the fields inside updateObj, not the whole user doc. duh
+        },
+        {
+            new: true,
+            runValidators: true,
+            select: "-password -refreshToken"
+        }
+    );
+
+    if (!updatedUser) {
+        throw new ApiError(404, "User not found");
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, updatedUser, "User updated successfully")
+    );
 });
 
 export {
@@ -333,5 +393,6 @@ export {
    getOwnProfile,
    updateUserSocials,
    updateUserInfo,
-   getAllUsers
+   getAllUsers,
+   updateUserById
 };
