@@ -5,7 +5,8 @@ import {
          logoutUser,
          getOwnProfile,
          updateUserSocials,
-         updateUserInfo 
+         updateUserInfo,
+         getAllUsers 
         } from "../controllers/user.controller.js";
 
 import { createTweet,
@@ -41,6 +42,6 @@ router.patch("/tweet/:id", verifyJWT, uploadMedia.single("media"), editTweet);
 router.get("/me", verifyJWT, getOwnProfile);
 router.patch("/socials", verifyJWT, updateUserSocials);
 router.patch("/personal", verifyJWT, uploadPfp.single("pfp"), updateUserInfo);
-router.get("/admin/users", verifyJWT, isAdmin, getAllUsers);
+router.get("/admin", verifyJWT, isAdmin, getAllUsers);
 
 export default router;
