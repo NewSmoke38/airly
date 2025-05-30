@@ -338,9 +338,9 @@ const updateUserById = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid user ID");
     }
 
-   updateObj.fullName = fullName;
-   updateObj.email = email.toLowerCase();
-   updateObj.role = role;
+  if (fullName) updateObj.fullName = fullName;
+  if (email) updateObj.email = email.toLowerCase();
+  if (role) updateObj.role = role;
 
     // Checks for duplicate email if being updated
     if (email) {
