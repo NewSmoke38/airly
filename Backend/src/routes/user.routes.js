@@ -19,7 +19,6 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { uploadPfp } from "../middlewares/multer.middleware.js";
 import { uploadMedia } from "../middlewares/multer.middleware.js";
 import { isAdmin } from "../middlewares/isAdmin.middlware.js"
-import { getAllUsers } from "../controllers/user.controller.js";
 
 
 const router = Router()
