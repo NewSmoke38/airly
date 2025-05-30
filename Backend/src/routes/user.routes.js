@@ -42,7 +42,7 @@ router.patch("/tweet/:id", verifyJWT, uploadMedia.single("media"), editTweet);
 router.get("/me", verifyJWT, getOwnProfile);
 router.patch("/socials", verifyJWT, updateUserSocials);
 router.patch("/personal", verifyJWT, uploadPfp.single("pfp"), updateUserInfo);
-router.get("/admin/getallusers", verifyJWT, isAdmin, getAllUsers);
+router.get("/admin/users", verifyJWT, isAdmin, getAllUsers);
 router.patch("/admin/users/:id", verifyJWT, isAdmin, updateUserById);
 //router.delete("/admin/users/:id", verifyJWT, isAdmin, deleteUserById); // Optional: if you want delete functionality
 
