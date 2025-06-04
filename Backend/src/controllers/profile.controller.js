@@ -99,7 +99,7 @@ const updateUserInfo = asyncHandler(async (req, res) => {
 
 // Updatig user's own socials
 const updateUserSocials = asyncHandler(async (req, res) => {
-    const socials = req.body.social; // like - twitter, github, linkedin
+    const socials = req.body.socials; // like - twitter, github, linkedin
 
     // If socials is missing or not an object, just skip updating and return current user
     if (!socials || typeof socials !== "object" || Object.keys(socials).length === 0) {

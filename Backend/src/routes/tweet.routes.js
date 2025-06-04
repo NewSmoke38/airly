@@ -6,7 +6,7 @@ import { uploadMedia } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
-router.post("/", verifyJWT, uploadMedia.single("media"), createTweet);
+router.post("/create", verifyJWT, uploadMedia.single("media"), createTweet);
 router.delete("/:id", verifyJWT, deleteTweet);
 router.post("/:id/like", verifyJWT, likeTweet);
 router.patch("/:id", verifyJWT, uploadMedia.single("media"), editTweet);

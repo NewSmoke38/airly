@@ -184,8 +184,5 @@ export {
    registerUser,
    loginUser,
    logoutUser,
-   getAllUsers,
-   updateUserById,
-   deleteUserById
 };
 
