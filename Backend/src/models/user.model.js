@@ -58,6 +58,10 @@ const userSchema = new Schema(
       type: String,
       enum: ["user", "admin"],
       default: "user"
+    },
+    joinedAt: {
+    type: Date,
+    default: Date.now
     }
 
 },
@@ -101,5 +105,15 @@ userSchema.methods.generateRefreshToken = function () {
     { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
   );
 };
+
+// for getting (joined at) on a user profile
+userSchema.methods.getJoinedDate = function() {
+    return new Intl.DateTimeFormat('en-US', { 
+        day: 'numeric',
+        month: 'long', 
+        year: 'numeric' 
+    }).format(this.joinedAt);
+};
+
 
 export const User = mongoose.model("User", userSchema)
