@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
+import { Tweet } from "../models/tweet.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
@@ -128,6 +129,113 @@ const updateUserSocials = asyncHandler(async (req, res) => {
 
 
 
+// Get user profile by username(for anyboooody)
+const getUserByUsername = asyncHandler(async (req, res) => {
+    const { username } = req.params;
+
+    const user = await User.findOne({ username: username.toLowerCase() })
+        .select("-password -refreshToken");
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    return res.status(200).json(
+        new ApiResponse(
+            200, 
+            {
+                ...user.toObject(),
+                joinedDate: user.getJoinedDate()
+            },
+            "User profile fetched successfully"
+        )
+    );
+});
+
+// get user posts by thier username(for everyyyyboody)
+const getPostsByUsername = asyncHandler(async (req, res) => {
+    const { username } = req.params;
+    const { cursor, batch = 12 } = req.query;
+
+    const user = await User.findOne({ username: username.toLowerCase() });
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    let matchStage = { user: user._id };
+    
+    if (cursor) {
+        matchStage._id = {      // Only fetch posts made by this user
+            $lt: new mongoose.Types.ObjectId(cursor)   // less than, older ones to be renderd
+        };
+    }
+
+    const posts = await Tweet.aggregate([
+        {
+            $match: matchStage
+        },
+        {
+            $sort: { createdAt: -1 }    // Sort tweets by that user by newest first
+        },
+        {
+            $limit: parseInt(batch) + 1    // Ask for 1 extra tweet than needed.
+// To check if there’s more posts after this batch (for infinite scroll).
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user",
+                pipeline: [
+                    {
+                        $project: {
+                            username: 1,
+                            fullName: 1,
+                            pfp: 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $unwind: "$user"     // take this user out ha
+        },
+        {
+            $project: {
+                title: 1,
+                content: 1,
+                media: 1,
+                likes: { $size: "$likes" },
+                user: 1,
+                createdAt: 1
+            }
+        }
+    ]);
+
+    const hasMore = posts.length > batch;    // If we got more than batch, there are more posts after this.
+    const nextCursor = hasMore ? posts[posts.length - 2]._id : null;   // If there are more posts, save the _id of the last real post (not the extra one) to use as the next cursor.
+
+    
+    if (hasMore) {
+        posts.pop();       // only to remove the extra post for the new batch and then it becomes the first in next batch
+    }
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                posts,
+                hasMore,
+                nextCursor: nextCursor?.toString()
+            },
+            `Posts by ${username} fetched successfully`
+        )
+    );
+});
+
+
+
 
 
 
@@ -135,5 +243,8 @@ const updateUserSocials = asyncHandler(async (req, res) => {
 export {
     getOwnProfile,
     updateUserSocials,
-    updateUserInfo
+    updateUserInfo,
+    getUserByUsername,
+    getPostsByUsername
+
 };
