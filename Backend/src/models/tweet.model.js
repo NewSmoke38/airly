@@ -45,4 +45,8 @@ const tweetSchema = new Schema(
     }
 )
 
+// Essential indexes for performance-critical queries
+tweetSchema.index({ createdAt: -1 }); // for sorting tweets in feed
+tweetSchema.index({ user: 1 });       // for fetching tweets by user
+
 export const Tweet = mongoose.model("Tweet", tweetSchema);

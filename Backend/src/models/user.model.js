@@ -115,5 +115,7 @@ userSchema.methods.getJoinedDate = function() {
     }).format(this.joinedAt);
 };
 
-
+// indexes for my cutie users hehe
+userSchema.index({ email: 1 }); // login, password resets
+userSchema.index({ role: 1 });  // for admin filtering or role-based features
 export const User = mongoose.model("User", userSchema)
