@@ -1,10 +1,8 @@
 export interface User {
-  _id: string;
-  fullName: string;
-  username: string;
+  id: string;
+  name: string;
   email: string;
-  pfp: string;
-  role: string;
+  avatar: string;
   bio?: string;
 }
 
@@ -16,19 +14,17 @@ export interface Comment {
 }
 
 export interface Post {
-  _id: string;
+  id: string;
   title: string;
-  content: string;
-  media: string;
-  likes: number;
-  user: {
-    username: string;
-    fullName: string;
-    pfp: string;
-  };
+  description: string;
+  imageUrl: string;
+  authorId: string;
+  author: User;
+  tags: string[];
   createdAt: string;
-  edited: boolean;
-  editedAt?: string;
+  likes: number;
+  isLiked: boolean;
+  comments?: Comment[];
 }
 
 export interface AuthState {
