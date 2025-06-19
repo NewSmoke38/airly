@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, TrendingUp, Clock, Star } from 'lucide-react';
 import { PostGrid } from '../posts/PostGrid';
-import { mockPosts } from '../../data/mockPosts';
+import { feedService } from '../../services/feedService';
 import { Post } from '../../types';
 
 interface HomePageProps {
@@ -14,14 +14,36 @@ export const HomePage: React.FC<HomePageProps> = ({ onEditPost, onPostClick }) =
   const [searchQuery, setSearchQuery] = useState(''); 
   const [selectedCategory, setSelectedCategory] = useState('all');  
   const [sortBy, setSortBy] = useState('recent');  
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch posts from API
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const fetchedPosts = await feedService.getFeed();
+      setPosts(fetchedPosts);
+    } catch (err) {
+      console.error('Error fetching posts:', err);
+      setError('Failed to load posts. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const categories = [
-    { id: 'all', label: 'All', count: mockPosts.length },
-    { id: 'photography', label: 'Photography', count: 8 },
-    { id: 'digital art', label: 'Digital Art', count: 5 },
-    { id: 'design', label: 'Design', count: 6 },
-    { id: 'nature', label: 'Nature', count: 7 },
-    { id: 'architecture', label: 'Architecture', count: 4 },
+    { id: 'all', label: 'All', count: posts.length },
+    { id: 'photography', label: 'Photography', count: posts.filter(p => p.tags?.includes('photography')).length },
+    { id: 'digital art', label: 'Digital Art', count: posts.filter(p => p.tags?.includes('digital art')).length },
+    { id: 'design', label: 'Design', count: posts.filter(p => p.tags?.includes('design')).length },
+    { id: 'nature', label: 'Nature', count: posts.filter(p => p.tags?.includes('nature')).length },
+    { id: 'architecture', label: 'Architecture', count: posts.filter(p => p.tags?.includes('architecture')).length },
   ];
 
   const sortOptions = [
@@ -31,25 +53,51 @@ export const HomePage: React.FC<HomePageProps> = ({ onEditPost, onPostClick }) =
   ];
 
   // filter and sort posts on category
-  const filteredPosts = mockPosts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         post.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredPosts = posts.filter(post => {
+    const matchesSearch = post.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         post.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         post.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     
     const matchesCategory = selectedCategory === 'all' || 
-                           post.tags.some(tag => tag.toLowerCase().includes(selectedCategory.toLowerCase()));
+                           post.tags?.some(tag => tag.toLowerCase().includes(selectedCategory.toLowerCase()));
 
     return matchesSearch && matchesCategory;
   }).sort((a, b) => {
     switch (sortBy) {
       case 'popular':
-        return b.likes - a.likes;  // sort by number of likes
+        return (b.likes || 0) - (a.likes || 0);  // sort by number of likes
       case 'liked':
         return (b.isLiked ? 1 : 0) - (a.isLiked ? 1 : 0);  // sort by liked status
       default:
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();  // sort by date
+        return new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime();  // sort by date
     }
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading posts...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-16">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Posts</h1>
+        <p className="text-gray-600 mb-4">{error}</p>
+        <button 
+          onClick={fetchPosts}
+          className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -127,7 +175,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onEditPost, onPostClick }) =
         </p>
       </div>
 
-      <PostGrid posts={filteredPosts} onEditPost={onEditPost} onPostClick={onPostClick} />
+      {filteredPosts.length === 0 ? (
+        <div className="text-center py-16">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">No posts found</h2>
+          <p className="text-gray-600">Try adjusting your search or filters</p>
+        </div>
+      ) : (
+        <PostGrid posts={filteredPosts} onEditPost={onEditPost} onPostClick={onPostClick} />
+      )}
     </div>
   );
 };
