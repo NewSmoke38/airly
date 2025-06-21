@@ -14,6 +14,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
   const [category, setCategory] = useState('');
   const [dragActive, setDragActive] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -45,6 +46,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
 
   const handleFile = (file: File) => {
     if (file.type.startsWith('image/')) {
+      setSelectedFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
         setSelectedImage(e.target?.result as string);
@@ -62,10 +64,16 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!selectedFile) {
+      alert('Please select an image file');
+      return;
+    }
+    
     const postData = {
       title,
       description,
       imageUrl: selectedImage || 'https://images.pexels.com/photos/158826/structure-light-led-movement-158826.jpeg?auto=compress&cs=tinysrgb&w=500&h=750&dpr=2',
+      imageFile: selectedFile,
       tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
       category,
     };
@@ -78,6 +86,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
     setTags('');
     setCategory('');
     setSelectedImage(null);
+    setSelectedFile(null);
     onClose();
   };
 
@@ -119,7 +128,10 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
                 />
                 <button
                   type="button"
-                  onClick={() => setSelectedImage(null)}
+                  onClick={() => {
+                    setSelectedImage(null);
+                    setSelectedFile(null);
+                  }}
                   className="absolute top-3 right-3 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
                 >
                   <X className="w-4 h-4" />

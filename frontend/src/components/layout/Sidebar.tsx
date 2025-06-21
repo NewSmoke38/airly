@@ -14,8 +14,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, onU
 
   const menuItems = [
     { id: 'home', icon: Home, label: 'Home' },
-    { id: 'search', icon: Search, label: 'Explore' },
-    { id: 'trending', icon: TrendingUp, label: 'Trending' },
     { id: 'favorites', icon: Heart, label: 'Favorites' },
     { id: 'saved', icon: Bookmark, label: 'Collections' },
     { id: 'following', icon: Users, label: 'Following' },

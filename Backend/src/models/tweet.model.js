@@ -35,6 +35,11 @@ const tweetSchema = new Schema(
           }
         ],
 
+        commentCount: {
+            type: Number,
+            default: 0
+        },
+
         edited: {
             type: Boolean,   
             default: false

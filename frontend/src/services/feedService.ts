@@ -19,7 +19,9 @@ export interface LikeResponse {
 
 // Transform backend post format to frontend format
 const transformPost = (backendPost: any): Post => {
-  return {
+  console.log('Transforming backend post:', backendPost);
+  
+  const transformed = {
     id: backendPost._id,
     title: backendPost.title,
     description: backendPost.content,
@@ -31,22 +33,30 @@ const transformPost = (backendPost: any): Post => {
       email: '', // Backend doesn't return email for security
       avatar: backendPost.user.pfp
     },
-    tags: [], // Backend doesn't have tags yet
+    tags: backendPost.tags || [], // Use tags from backend, fallback to empty array
     createdAt: backendPost.createdAt,
     likes: backendPost.likes || 0,
     isLiked: false // This would need to be determined by checking if current user is in likes array
   };
+  
+  console.log('Transformed post:', transformed);
+  return transformed;
 };
 
 export const feedService = {
   // Get all posts for the feed
   async getFeed(page: number = 1, limit: number = 10): Promise<Post[]> {
     try {
+      console.log('Fetching feed from API...');
       const response = await axios.get(`/feed?batch=${limit}`);
+      console.log('API Response:', response.data);
+      
       const data = response.data.data || response.data;
+      console.log('Processed data:', data);
       
       // Transform backend posts to frontend format
       const posts = data.posts ? data.posts.map(transformPost) : [];
+      console.log('Transformed posts:', posts);
       return posts;
     } catch (error) {
       console.error('Error fetching feed:', error);
@@ -86,7 +96,13 @@ export const feedService = {
   async toggleLike(postId: string): Promise<{ likes: number; isLiked: boolean }> {
     try {
       const response = await axios.post(`/tweets/${postId}/like`);
-      return response.data.data || response.data;
+      
+      // The backend only returns success message, not updated like data
+      // We'll return a simple response and let the UI handle the optimistic update
+      return {
+        likes: 0, // This will be handled by the UI
+        isLiked: true // This will be toggled by the UI
+      };
     } catch (error) {
       console.error('Error toggling like:', error);
       throw error;
@@ -131,6 +147,34 @@ export const feedService = {
       return posts;
     } catch (error) {
       console.error('Error fetching user posts:', error);
+      throw error;
+    }
+  },
+
+  // Search posts by tags
+  async searchByTags(tags: string[], page: number = 1, limit: number = 10): Promise<Post[]> {
+    try {
+      const tagsParam = Array.isArray(tags) ? tags.join(',') : tags;
+      const response = await axios.get(`/tweets/search/tags?tags=${encodeURIComponent(tagsParam)}&batch=${limit}`);
+      const data = response.data.data || response.data;
+      
+      const posts = data.tweets ? data.tweets.map(transformPost) : [];
+      return posts;
+    } catch (error) {
+      console.error('Error searching posts by tags:', error);
+      throw error;
+    }
+  },
+
+  // Get popular tags
+  async getPopularTags(limit: number = 20): Promise<{ tag: string; count: number }[]> {
+    try {
+      const response = await axios.get(`/tweets/popular-tags?limit=${limit}`);
+      const data = response.data.data || response.data;
+      
+      return data.tags || [];
+    } catch (error) {
+      console.error('Error fetching popular tags:', error);
       throw error;
     }
   }

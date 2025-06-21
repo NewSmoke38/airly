@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit, MapPin, Calendar, Users, Award, Eye, Heart } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { PostGrid } from '../posts/PostGrid';
-import { mockPosts } from '../../data/mockPosts';
+import { feedService } from '../../services/feedService';
 import { Post } from '../../types';
 
 interface ProfilePageProps {
@@ -13,10 +13,34 @@ interface ProfilePageProps {
 export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClick }) => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('posts');
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Fetch posts on component mount
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      console.log('ProfilePage: Fetching posts...');
+      setLoading(true);
+      setError(null);
+      const fetchedPosts = await feedService.getFeed();
+      console.log('ProfilePage: Received posts:', fetchedPosts);
+      setPosts(fetchedPosts);
+    } catch (err) {
+      console.error('ProfilePage: Error fetching posts:', err);
+      setError('Failed to load posts. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // filter posts for current user
-  const userPosts = mockPosts.filter(post => post.authorId === user?.id);
-  const likedPosts = mockPosts.filter(post => post.isLiked);
+  const userPosts = posts.filter(post => post.authorId === user?.id);
+  const likedPosts = posts.filter(post => post.isLiked);
   const totalLikes = userPosts.reduce((sum, post) => sum + post.likes, 0);
   const totalViews = userPosts.length * 1250;
 
@@ -35,6 +59,32 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
 
   // function to render content based on active tab
   const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading posts...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="text-center py-16">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Posts</h1>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={fetchPosts}
+            className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      );
+    }
+
     switch (activeTab) {
       case 'posts':
         // render user posts or empty state

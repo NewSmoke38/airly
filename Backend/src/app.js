@@ -6,30 +6,24 @@ import cookieParser from "cookie-parser"
 
 const app = express();
 
-// CORS Configuration
 app.use(cors({
     origin: ["http://localhost:3000", "http://localhost:5173"],
     credentials: true
 }));
 
-// here we set a limit to how much JSON we can recieve 
-app.use(express.json({limit: "16kb"}))    // middleware is needed for JSON 
+app.use(express.json({limit: "16kb"}))    
 
-// getting req from a url
-app.use(express.urlencoded({extended: true, limit: "16kb"}))   // extended here makes the url have nested objects also, its a powerful thing man
+app.use(express.urlencoded({extended: true, limit: "16kb"}))   
 
-// for storing public kinda stuff so that anyone can use it, pdfs, images and all
 app.use(express.static("public"))
 
 app.use(cookieParser())
 
-// for pfp being too large 
 app.use((err, req, res, next) => {
   if (err.code === "LIMIT_FILE_SIZE") {
     return res.status(400).json({ message: "Profile picture too large. Max 3MB allowed." });
   }
 
-  // let other errors pass through
   next(err);
 });
 
@@ -40,6 +34,8 @@ import profileRouter from "./routes/profile.routes.js";
 import tweetRouter from "./routes/tweet.routes.js";
 import adminRouter from "./routes/admin.routes.js";
 import feedRouter from "./routes/feed.routes.js";
+import commentRouter from "./routes/comment.routes.js";
+
 
 // routes declaration
 app.use("/api/v1/users", userRouter);
@@ -47,6 +43,7 @@ app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/tweets", tweetRouter);
 app.use("/api/v1/admin", adminRouter);       
 app.use("/api/v1/feed", feedRouter);
+app.use("/api/v1", commentRouter);
 
 // http://localhost:8000/api/v1/users/register
 

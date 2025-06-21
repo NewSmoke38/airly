@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Heart, Download, Share, MoreHorizontal, Edit, Eye } from 'lucide-react';
 import { Post } from '../../types';
+import { feedService } from '../../services/feedService';
 
 interface PostCardProps {
   post: Post;  
@@ -12,16 +13,32 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onEdit, onClick }) => 
   const [isLiked, setIsLiked] = useState(post.isLiked);  
   const [likes, setLikes] = useState(post.likes);  
   const [showActions, setShowActions] = useState(false);  
+  const [imageError, setImageError] = useState(false);
 
-  const handleLike = (e: React.MouseEvent) => {
-    e.stopPropagation();  
-    setIsLiked(!isLiked);  
-    setLikes(prev => isLiked ? prev - 1 : prev + 1);  
+  const handleLike = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Optimistic update
+    setIsLiked(!isLiked);
+    setLikes(prev => isLiked ? prev - 1 : prev + 1);
+    
+    try {
+      await feedService.toggleLike(post.id);
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      // Revert on error
+      setIsLiked(isLiked);
+      setLikes(prev => isLiked ? prev + 1 : prev - 1);
+    }
   };
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();  
     onEdit?.(post);  
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
   };
 
   return (
@@ -32,12 +49,22 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onEdit, onClick }) => 
       onClick={onClick}  
     >
       <div className="relative">
-        <img
-          src={post.imageUrl}
-          alt={post.title}
-          className="w-full h-auto object-cover"
-          loading="lazy"
-        />
+        {imageError ? (
+          <div className="w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-gray-400 text-4xl mb-2">📷</div>
+              <p className="text-gray-500 text-sm">Image not available</p>
+            </div>
+          </div>
+        ) : (
+          <img
+            src={post.imageUrl}
+            alt={post.title}
+            className="w-full h-auto object-cover"
+            loading="lazy"
+            onError={handleImageError}
+          />
+        )}
         
         <div
           className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity duration-300 ${

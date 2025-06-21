@@ -7,6 +7,7 @@ import { HomePage } from './components/pages/HomePage';
 import { ProfilePage } from './components/pages/ProfilePage';
 import { PostDetailPage } from './components/pages/PostDetailPage';
 import { UploadModal } from './components/modals/UploadModal';
+import { tweetService } from './services/tweetService';
 import { Post } from './types';
 
 const MainApp: React.FC = () => {
@@ -50,9 +51,27 @@ const MainApp: React.FC = () => {
     console.log('Edit post:', post);
   };
 
-  const handleUpload = (postData: any) => {
-    // In a real app, this would send data to the backend
-    console.log('Upload post:', postData);
+  const handleUpload = async (postData: any) => {
+    try {
+      console.log('Uploading post:', postData);
+      
+      // Convert the postData to the format expected by the backend
+      const createPostData = {
+        title: postData.title,
+        description: postData.description,
+        tags: postData.tags || [],
+        media: postData.imageFile // We need to get the actual file from the modal
+      };
+      
+      const newPost = await tweetService.createPost(createPostData);
+      console.log('Post created successfully:', newPost);
+      
+      // Refresh the current page to show the new post
+      window.location.reload();
+    } catch (error) {
+      console.error('Error creating post:', error);
+      alert('Failed to create post. Please try again.');
+    }
   };
 
   const handlePostClick = (post: Post) => {

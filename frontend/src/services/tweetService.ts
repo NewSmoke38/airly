@@ -33,8 +33,8 @@ export const tweetService = {
     try {
       const formData = new FormData();
       formData.append('title', postData.title);
-      formData.append('description', postData.description);
-      formData.append('tags', JSON.stringify(postData.tags));
+      formData.append('content', postData.description);
+      formData.append('tags', postData.tags.join(','));
       
       if (postData.media) {
         formData.append('media', postData.media);
@@ -70,8 +70,8 @@ export const tweetService = {
       const formData = new FormData();
       
       if (updateData.title) formData.append('title', updateData.title);
-      if (updateData.description) formData.append('description', updateData.description);
-      if (updateData.tags) formData.append('tags', JSON.stringify(updateData.tags));
+      if (updateData.description) formData.append('content', updateData.description);
+      if (updateData.tags) formData.append('tags', updateData.tags.join(','));
       if (updateData.media) formData.append('media', updateData.media);
       
       const response = await axios.patch(`/tweets/${postId}`, formData, {

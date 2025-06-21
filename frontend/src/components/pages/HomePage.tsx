@@ -25,12 +25,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onEditPost, onPostClick }) =
 
   const fetchPosts = async () => {
     try {
+      console.log('HomePage: Starting to fetch posts...');
       setLoading(true);
       setError(null);
       const fetchedPosts = await feedService.getFeed();
+      console.log('HomePage: Received posts:', fetchedPosts);
       setPosts(fetchedPosts);
     } catch (err) {
-      console.error('Error fetching posts:', err);
+      console.error('HomePage: Error fetching posts:', err);
       setError('Failed to load posts. Please try again later.');
     } finally {
       setLoading(false);
