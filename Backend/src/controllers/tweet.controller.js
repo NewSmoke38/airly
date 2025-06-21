@@ -7,9 +7,8 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
 
-// create a tweet
 const createTweet = asyncHandler(async (req, res) => {
-    const { title, content } = req.body;
+    const { title, content, tags } = req.body;
 
 
 console.log("req.user:", req.user);
@@ -30,13 +29,21 @@ console.log("req.user:", req.user);
         throw new ApiError(400, "Media file is required");
     }
 
-    // Creating a tweet (hitting the send/post/create button)
+    let processedTags = [];
+    if (tags) {
+        const tagArray = Array.isArray(tags) ? tags : tags.split(',').map(tag => tag.trim());
+        processedTags = tagArray
+            .filter(tag => tag.length > 0)  
+            .slice(0, 10)
+            .map(tag => tag.toLowerCase());
+    }
+
     const tweet = await Tweet.create({
         title,
         content,
         media: mediaUrl,
-        user: req.user._id.toString()   // <-- associate tweet with the authenticated user  
-         
+        tags: processedTags,
+        user: req.user._id.toString()   
     });
     return res
     .status(201)
@@ -46,7 +53,6 @@ console.log("req.user:", req.user);
 });
 
 
-// delete a tweet
 const deleteTweet = asyncHandler(async (req, res) => {
     const tweetId = req.params.id;
 
@@ -75,32 +81,42 @@ const deleteTweet = asyncHandler(async (req, res) => {
 });
 
 
-// edit a tweet
 const editTweet = asyncHandler(async (req, res) => {
-    const tweetId = req.params.id;      // Get tweet ID from URL params
-    const { title, content } = req.body;
+    const tweetId = req.params.id;     
+    const { title, content, tags } = req.body;
 
-    // Find the tweet
+
     const tweet = await Tweet.findById(tweetId);
     if (!tweet) {
         throw new ApiError(404, "Tweet not found");
     }
 
-    // Only the owner can edit
+
     if (!tweet.user || tweet.user.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You are not authorized to edit this tweet");
     }
 
-    // Update fields if provided
     if (title) tweet.title = title;
     if (content) tweet.content = content;
-    // Handle media update if a new file is uploaded
+    
+
+    if (tags !== undefined) {
+        let processedTags = [];
+        if (tags) {
+            const tagArray = Array.isArray(tags) ? tags : tags.split(',').map(tag => tag.trim());
+            processedTags = tagArray
+                .filter(tag => tag.length > 0)
+                .slice(0, 10)
+                .map(tag => tag.toLowerCase());
+        }
+        tweet.tags = processedTags;
+    }
+    
     if (req.file) {
         const uploadResult = await uploadOnCloudinary(req.file.path);
         tweet.media = uploadResult.url;
     }
 
-    // Add watermark
     tweet.edited = true;
     tweet.editedAt = new Date();
 
@@ -113,9 +129,138 @@ const editTweet = asyncHandler(async (req, res) => {
     );
 });
 
+
+const searchTweetsByTags = asyncHandler(async (req, res) => {
+    const { tags, cursor, batch = 20 } = req.query;
+
+    if (!tags) {
+        throw new ApiError(400, "Tags parameter is required");
+    }
+
+    // Convert tags to array and normalize
+    const tagArray = Array.isArray(tags) ? tags : tags.split(',').map(tag => tag.trim().toLowerCase());
+    
+    const limit = parseInt(batch) + 1;
+
+    let matchStage = {
+        tags: { $in: tagArray }  // Find tweets that have any of the specified tags
+    };
+
+    if (cursor) {
+        matchStage._id = {
+            $lt: new mongoose.Types.ObjectId(cursor)
+        };
+    }
+
+    const tweets = await Tweet.aggregate([
+        {
+            $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user",
+                pipeline: [
+                    {
+                        $project: {
+                            username: 1,
+                            fullName: 1,
+                            pfp: 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $unwind: "$user"
+        },
+        {
+            $match: matchStage
+        },
+        {
+            $sort: { createdAt: -1 }
+        },
+        {
+            $limit: limit
+        },
+        {
+            $project: {
+                title: 1,
+                content: 1,
+                media: 1,
+                tags: 1,
+                likes: { $size: "$likes" },
+                user: 1,
+                createdAt: 1
+            }
+        }
+    ]);
+
+    const hasMore = tweets.length > batch;
+    
+    if (hasMore) {
+        tweets.pop();
+    }
+
+    const nextCursor = hasMore ? tweets[tweets.length - 1]._id : null;
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                tweets,
+                hasMore,
+                nextCursor: nextCursor?.toString(),
+                searchTags: tagArray
+            },
+            "Tweets found by tags"
+        )
+    );
+});
+
+const getPopularTags = asyncHandler(async (req, res) => {
+    const { limit = 20 } = req.query;
+
+    const popularTags = await Tweet.aggregate([
+        {
+            $unwind: "$tags"  // Separate each tag into its own document
+        },
+        {
+            $group: {
+                _id: "$tags",
+                count: { $sum: 1 }  // Count occurrences of each tag
+            }
+        },
+        {
+            $sort: { count: -1 }  // Sort by most popular first
+        },
+        {
+            $limit: parseInt(limit)
+        },
+        {
+            $project: {
+                tag: "$_id",
+                count: 1,
+                _id: 0
+            }
+        }
+    ]);
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                tags: popularTags
+            },
+            "Popular tags fetched successfully"
+        )
+    );
+});
+
 export {
     createTweet,
     deleteTweet,
-    editTweet
+    editTweet,
+    searchTweetsByTags,
+    getPopularTags
 }
 

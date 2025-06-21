@@ -7,16 +7,21 @@ const tweetSchema = new Schema(
             required: true
         },
         media: {
-            type: String,    // URL or path to the media file (image, gif, or video)
+            type: String,    
             required: true,
         },
         content: {
             type: String,
             required: true,
-            trim: true,           // removes leading/trailing whitespace
-            maxlength: 280,       // limit to 280 characters (like Twitter)
+            trim: true,           
+            maxlength: 280,       
             minlength: 1 
         },
+        tags: [{
+            type: String,
+            trim: true,
+            lowercase: true       
+        }],
         user: {
             type: Schema.Types.ObjectId,
             ref: "User",
@@ -48,5 +53,6 @@ const tweetSchema = new Schema(
 // Essential indexes for performance-critical queries
 tweetSchema.index({ createdAt: -1 }); // for sorting tweets in feed
 tweetSchema.index({ user: 1 });       // for fetching tweets by user
+tweetSchema.index({ tags: 1 });       // for searching tweets by tags
 
 export const Tweet = mongoose.model("Tweet", tweetSchema);

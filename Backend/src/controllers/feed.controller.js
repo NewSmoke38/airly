@@ -6,22 +6,20 @@ import mongoose from "mongoose";
 
 
 const getFeedPosts = asyncHandler(async (req, res) => {
-    const { cursor, batch = 20 } = req.query; //   for bento grid layout
- // cursor(for pagiantion) = where to start fetching from, its like a bookmark every 20 batches 
-    // batch = how many posts to fetch (default 20)
+    const { cursor, batch = 20 } = req.query; 
 
-    //  fetch one extra post to determine if more exist
     const limit = parseInt(batch) + 1;
 
-    let matchStage = {};   // if cursor detected
+    let matchStage = {};   
     if (cursor) {
-        matchStage = {         //Give me posts created before this point. always loading the next older batch.
+        matchStage = {         
             _id: {
-                $lt: new mongoose.Types.ObjectId(cursor)  // shows older tweets that came before this id of a tweeet, the last one in any batch
-            }    // less than
+                $lt: new mongoose.Types.ObjectId(cursor)  
+            }   
         };
     }
-    const posts = await Tweet.aggregate([       // tweet model me aggeregate krwa rhe hai
+    const posts = await Tweet.aggregate([      
+
         {
             $lookup: {
                 from: "users",
@@ -30,7 +28,7 @@ const getFeedPosts = asyncHandler(async (req, res) => {
                 as: "user",
                 pipeline: [
                     {
-                        $project: {       // Only pulling these three fields from each user
+                        $project: {       
                             username: 1,
                             fullName: 1,
                             pfp: 1
@@ -40,13 +38,13 @@ const getFeedPosts = asyncHandler(async (req, res) => {
             }
         },
         {
-            $unwind: "$user"        // lifts out each item and treat it like it’s standing on its own in a messy nested array of all users
+            $unwind: "$user"        
         },
         {
-            $match: matchStage       // if cursor got hit, duh
+            $match: matchStage       
         },
         {
-            $sort: { createdAt: -1 } // Sorts tweets by newest first
+            $sort: { createdAt: -1 } 
         },
         {
             $limit: limit 
@@ -56,6 +54,7 @@ const getFeedPosts = asyncHandler(async (req, res) => {
                 title: 1,
                 content: 1,
                 media: 1,
+                tags: 1,
                 likes: { $size: "$likes" },
                 user: 1,
                 createdAt: 1
