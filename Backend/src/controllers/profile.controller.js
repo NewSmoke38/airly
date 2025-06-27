@@ -32,14 +32,11 @@ const updateUserInfo = asyncHandler(async (req, res) => {
     const { fullName, username, email, password } = req.body;
     let updateObj = {};
 
-    // Handling pfp update (if file uploaded)
     if (req.file) {
-        // using cloudinary for uploads
         const uploadResult = await uploadOnCloudinary(req.file.path);
         updateObj.pfp = uploadResult.url;
     }
 
-    // If nothing to update, return current user
     if (
         (!fullName || fullName.trim() === "") &&
         (!username || username.trim() === "") &&
@@ -53,7 +50,6 @@ const updateUserInfo = asyncHandler(async (req, res) => {
         );
     }
 
-    // Check for duplicate username/email if they are being changed and are already taken
     if (username) {
         const existingUser = await User.findOne({ username: username.toLowerCase(), _id: { $ne: req.user._id } });
         if (existingUser) {
@@ -70,7 +66,6 @@ const updateUserInfo = asyncHandler(async (req, res) => {
     }
     if (fullName) updateObj.fullName = fullName;
 
-    //  password update, hashing it also 
     if (password) {
       if (password.length < 6 || password.length > 8) {
         throw new ApiError(400, "Password must be between 6 and 8 characters");
@@ -99,7 +94,6 @@ const updateUserInfo = asyncHandler(async (req, res) => {
 const updateUserSocials = asyncHandler(async (req, res) => {
     const socials = req.body.socials; // like - twitter, github, linkedin
 
-    // If socials is missing or not an object, just skip updating and return current user
     if (!socials || typeof socials !== "object" || Object.keys(socials).length === 0) {
         const user = await User.findById(req.user._id).select("-password -refreshToken");
         return res.status(200).json(
@@ -160,8 +154,8 @@ const getPostsByUsername = asyncHandler(async (req, res) => {
     let matchStage = { user: user._id };
     
     if (cursor) {
-        matchStage._id = {      // Only fetch posts made by this user
-            $lt: new mongoose.Types.ObjectId(cursor)   // less than, older ones to be renderd
+        matchStage._id = {      
+            $lt: new mongoose.Types.ObjectId(cursor)   
         };
     }
 
@@ -170,11 +164,11 @@ const getPostsByUsername = asyncHandler(async (req, res) => {
             $match: matchStage
         },
         {
-            $sort: { createdAt: -1 }    // Sort tweets by that user by newest first
+            $sort: { createdAt: -1 }    
         },
+        
         {
-            $limit: parseInt(batch) + 1    // Ask for 1 extra tweet than needed.
-// To check if there's more posts after this batch (for infinite scroll).
+            $limit: parseInt(batch) + 1    
         },
         {
             $lookup: {
@@ -187,14 +181,14 @@ const getPostsByUsername = asyncHandler(async (req, res) => {
                         $project: {
                             username: 1,
                             fullName: 1,
-                            pfp: 1
+                             pfp: 1
                         }
                     }
                 ]
             }
         },
         {
-            $unwind: "$user"     // take this user out ha
+            $unwind: "$user"     
         },
         {
             $project: {
@@ -203,7 +197,6 @@ const getPostsByUsername = asyncHandler(async (req, res) => {
                 media: 1,
                 views: 1,
                 likes: { $size: "$likes" },
-                bookmarkCount: { $size: "$bookmarkedBy" },
                 user: 1,
                 createdAt: 1
             }
