@@ -1,10 +1,15 @@
 export interface User {
-  id: string;
-  name: string;
+  _id: string;
+  fullName: string;
+  username: string;
   email: string;
-  avatar: string;
+  pfp: string;
+  role: string;
+  joinedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
   bio?: string;
-  username?: string;
 }
 
 export interface Comment {
@@ -15,17 +20,35 @@ export interface Comment {
 }
 
 export interface Post {
-  id: string;
+  id?: string;
+  _id?: string;
   title: string;
-  description: string;
-  imageUrl: string;
-  authorId: string;
-  author: User;
-  tags: string[];
-  createdAt: string;
+  content?: string;
+  description?: string;
+  media?: string;
+  imageUrl?: string;
+  mediaUrl?: string;
+  mediaType?: 'image' | 'video' | 'document';
   likes: number;
-  isLiked: boolean;
-  comments?: Comment[];
+  comments?: number;
+  views?: number;
+  tags?: string[];
+  user?: {
+    username: string;
+    fullName: string;
+    pfp: string;
+  };
+  author?: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string;
+  };
+  authorId?: string;
+  createdAt: string;
+  edited?: boolean;
+  editedAt?: string;
+  isLiked?: boolean;
 }
 
 export interface AuthState {
