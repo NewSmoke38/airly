@@ -1,29 +1,39 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { Eye, EyeOff, Lock, User } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { loginSuccess } from '../../features/auth/authSlice';
+import { userService } from '../../services/userService';
 
-interface LoginProps {
-  onSwitchToSignup: () => void;
-}
-
-export const Login: React.FC<LoginProps> = ({ onSwitchToSignup }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export const Login: React.FC = () => {
+  const [emailOrUsername, setEmailOrUsername] = useState('test12');
+  const [password, setPassword] = useState('test1tes');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { login } = useAuth();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
-    
     try {
-      await login(email, password);
-    } catch (error: any) {
+      const isEmail = emailOrUsername.includes('@');
+      const loginData = {
+        [isEmail ? 'email' : 'username']: emailOrUsername,
+        password
+      };
+      
+      const response = await userService.login(loginData);
+      console.log('Raw login API response:', response);
+      
+      // Dispatch login success action with the response data
+      dispatch(loginSuccess({
+        user: response.user,
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken
+      }));
+    } catch (error) {
       console.error('Login failed:', error);
-      setError(error.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -40,24 +50,17 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToSignup }) => {
           <p className="text-white/70">Continue your creative journey</p>
         </div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl flex items-center space-x-3">
-            <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
-            <p className="text-red-200 text-sm">{error}</p>
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Mail className="h-5 w-5 text-white/60" />
+              <User className="h-5 w-5 text-white/60" />
             </div>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={emailOrUsername}
+              onChange={(e) => setEmailOrUsername(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-transparent backdrop-blur-sm transition-all duration-200"
-              placeholder="Email address"
+              placeholder="Email or username"
               required
             />
           </div>
@@ -100,7 +103,7 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToSignup }) => {
           <p className="text-white/70">
             Don't have an account?{' '}
             <button
-              onClick={onSwitchToSignup}
+              onClick={() => navigate('/signup')}
               className="text-amber-400 font-semibold hover:text-amber-300 focus:outline-none transition-colors"
             >
               Sign up

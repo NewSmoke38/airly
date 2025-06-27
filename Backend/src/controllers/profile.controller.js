@@ -6,7 +6,6 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
 
-// Getting logged-in user's profile
 const getOwnProfile = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id).select("-password -refreshToken");
 
@@ -29,7 +28,6 @@ const getOwnProfile = asyncHandler(async (req, res) => {
 });
 
 
-// updating personal info
 const updateUserInfo = asyncHandler(async (req, res) => {
     const { fullName, username, email, password } = req.body;
     let updateObj = {};
@@ -98,7 +96,6 @@ const updateUserInfo = asyncHandler(async (req, res) => {
     );
 });
 
-// Updatig user's own socials
 const updateUserSocials = asyncHandler(async (req, res) => {
     const socials = req.body.socials; // like - twitter, github, linkedin
 
@@ -129,7 +126,6 @@ const updateUserSocials = asyncHandler(async (req, res) => {
 
 
 
-// Get user profile by username(for anyboooody)
 const getUserByUsername = asyncHandler(async (req, res) => {
     const { username } = req.params;
 
@@ -152,7 +148,6 @@ const getUserByUsername = asyncHandler(async (req, res) => {
     );
 });
 
-// get user posts by thier username(for everyyyyboody)
 const getPostsByUsername = asyncHandler(async (req, res) => {
     const { username } = req.params;
     const { cursor, batch = 12 } = req.query;
@@ -179,7 +174,7 @@ const getPostsByUsername = asyncHandler(async (req, res) => {
         },
         {
             $limit: parseInt(batch) + 1    // Ask for 1 extra tweet than needed.
-// To check if there’s more posts after this batch (for infinite scroll).
+// To check if there's more posts after this batch (for infinite scroll).
         },
         {
             $lookup: {
@@ -206,7 +201,9 @@ const getPostsByUsername = asyncHandler(async (req, res) => {
                 title: 1,
                 content: 1,
                 media: 1,
+                views: 1,
                 likes: { $size: "$likes" },
+                bookmarkCount: { $size: "$bookmarkedBy" },
                 user: 1,
                 createdAt: 1
             }
@@ -247,4 +244,4 @@ export {
     getUserByUsername,
     getPostsByUsername
 
-};
+        };

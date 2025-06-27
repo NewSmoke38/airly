@@ -35,6 +35,9 @@ import tweetRouter from "./routes/tweet.routes.js";
 import adminRouter from "./routes/admin.routes.js";
 import feedRouter from "./routes/feed.routes.js";
 import commentRouter from "./routes/comment.routes.js";
+import viewsRouter from "./routes/views.routes.js";
+import likeRouter from "./routes/like.routes.js";
+import bookmarkRouter from "./routes/bookmark.routes.js";
 
 
 // routes declaration
@@ -44,6 +47,9 @@ app.use("/api/v1/tweets", tweetRouter);
 app.use("/api/v1/admin", adminRouter);       
 app.use("/api/v1/feed", feedRouter);
 app.use("/api/v1", commentRouter);
+app.use("/api/v1/views", viewsRouter);
+app.use("/api/v1/likes", likeRouter);
+app.use("/api/v1/bookmarks", bookmarkRouter);
 
 // http://localhost:8000/api/v1/users/register
 

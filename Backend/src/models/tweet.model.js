@@ -40,7 +40,28 @@ const tweetSchema = new Schema(
             default: 0
         },
 
-        edited: {
+        views: {
+            type: Number,
+            default: 0
+        },
+
+        viewedBy: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "User",
+                default: []
+            }
+        ],
+
+        bookmarkedBy: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "User",
+                default: []
+            }
+        ],
+
+    edited: {
             type: Boolean,   
             default: false
           },
@@ -50,14 +71,15 @@ const tweetSchema = new Schema(
 },
 
     },
-    {
+ {
         timestamps: true
-    }
+}
 )
 
-// Essential indexes for performance-critical queries
-tweetSchema.index({ createdAt: -1 }); // for sorting tweets in feed
-tweetSchema.index({ user: 1 });       // for fetching tweets by user
-tweetSchema.index({ tags: 1 });       // for searching tweets by tags
+tweetSchema.index({ createdAt: -1 }); 
+tweetSchema.index({ user: 1 });       
+tweetSchema.index({ tags: 1 });       
+tweetSchema.index({ views: -1 });     
+tweetSchema.index({ bookmarkedBy: 1 });
 
 export const Tweet = mongoose.model("Tweet", tweetSchema);

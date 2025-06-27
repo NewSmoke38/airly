@@ -1,5 +1,4 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Tweet } from "../models/tweet.model.js";
 import mongoose from "mongoose";
@@ -55,27 +54,25 @@ const getFeedPosts = asyncHandler(async (req, res) => {
                 content: 1,
                 media: 1,
                 tags: 1,
+                views: 1,
                 likes: { $size: "$likes" },
+                bookmarkCount: { $size: "$bookmarkedBy" },
                 user: 1,
                 createdAt: 1
             }
         }
     ]);
     
-    //Check if there are more posts
     const hasMore = posts.length > batch;
     
-    //  remove the extra post we fetched
     if (hasMore) {
         posts.pop();
     }
 
-    // get the cursor for the next batch
-    const nextCursor = hasMore ? posts[posts.length - 1]._id : null;
+const nextCursor = hasMore ? posts[posts.length - 1]._id : null;
 
 
-    const totalPosts = await Tweet.countDocuments();       //Count total posts (for the sake of pagination metadata)
-
+    const totalPosts = await Tweet.countDocuments();       
     return res.status(200).json(
         new ApiResponse(
             200,
@@ -83,9 +80,9 @@ const getFeedPosts = asyncHandler(async (req, res) => {
                 posts,
                 hasMore,
                 nextCursor: nextCursor?.toString()
-            },
+    },
             "Feed posts fetched successfully"
-        )
+)
     );
 });
 
@@ -93,4 +90,4 @@ const getFeedPosts = asyncHandler(async (req, res) => {
 
 export { 
     getFeedPosts 
-}; 
+       }; 

@@ -4,95 +4,99 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Tweet } from "../models/tweet.model.js";
 import mongoose from "mongoose";
 
-const likeTweet = asyncHandler(async (req, res) => {
-    const tweetId = req.params.id;
+const toggleBookmark = asyncHandler(async (req, res) => {
+    const { tweetId } = req.params;
     const userId = req.user._id;
+
+    if (!tweetId) {
+        throw new ApiError(400, "Tweet ID is required");
+    }
 
     const tweet = await Tweet.findById(tweetId);
     if (!tweet) {
         throw new ApiError(404, "Tweet not found");
     }
 
-    // toggle
-    const alreadyLiked = tweet.likes.some(id => id.toString() === userId.toString());
-    if (alreadyLiked) {
-        tweet.likes = tweet.likes.filter(id => id.toString() !== userId.toString());
+    const alreadyBookmarked = tweet.bookmarkedBy.some(
+        id => id.toString() === userId.toString()
+    );
+
+    if (alreadyBookmarked) {
+        tweet.bookmarkedBy = tweet.bookmarkedBy.filter(
+            id => id.toString() !== userId.toString()
+        );
         await tweet.save();
+
         return res.status(200).json(
             new ApiResponse(
                 200,
                 { 
-                    liked: false, 
-                    likeCount: tweet.likes.length 
+                    bookmarked: false, 
+                    bookmarkCount: tweet.bookmarkedBy.length 
                 },
-                "Tweet unliked successfully"
+                "Bookmark removed successfully"
             )
         );
     } else {
-        tweet.likes.push(userId);
+        tweet.bookmarkedBy.push(userId);
         await tweet.save();
+
         return res.status(200).json(
             new ApiResponse(
                 200,
                 { 
-                    liked: true, 
-                    likeCount: tweet.likes.length 
+                    bookmarked: true, 
+                    bookmarkCount: tweet.bookmarkedBy.length 
                 },
-                "Tweet liked successfully"
+                "Tweet bookmarked successfully"
             )
         );
     }
 });
 
-const getLikeCount = asyncHandler(async (req, res) => {
-    const tweetId = req.params.id;
-
-    const tweet = await Tweet.findById(tweetId).select("likes");
-    if (!tweet) {
-        throw new ApiError(404, "Tweet not found");
-    }
-
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            { likeCount: tweet.likes.length },
-            "Like count fetched successfully"
-        )
-    );
-});
-
-const checkUserLiked = asyncHandler(async (req, res) => {
-    const tweetId = req.params.id;
+const checkUserBookmarked = asyncHandler(async (req, res) => {
+    const { tweetId } = req.params;
     const userId = req.user._id;
 
-    const tweet = await Tweet.findById(tweetId).select("likes");
+    if (!tweetId) {
+        throw new ApiError(400, "Tweet ID is required");
+    }
+
+    const tweet = await Tweet.findById(tweetId).select("bookmarkedBy");
     if (!tweet) {
         throw new ApiError(404, "Tweet not found");
     }
 
-    const hasLiked = tweet.likes.some(id => id.toString() === userId.toString());
+    const hasBookmarked = tweet.bookmarkedBy.some(
+        id => id.toString() === userId.toString()
+    );
 
     return res.status(200).json(
         new ApiResponse(
             200,
-            { liked: hasLiked },
-            "Like status checked successfully"
+            { bookmarked: hasBookmarked },
+            "Bookmark status checked successfully"
         )
     );
 });
 
-const getMostLikedTweets = asyncHandler(async (req, res) => {
+const getMostBookmarkedTweets = asyncHandler(async (req, res) => {
+    // Extract query parameters with defaults
     const { limit = 10, cursor } = req.query;
 
+    // Build match stage for pagination
     let matchStage = {};
     if (cursor) {
         matchStage._id = { $lt: new mongoose.Types.ObjectId(cursor) };
     }
 
+    // Aggregate pipeline to get most bookmarked tweets
     const tweets = await Tweet.aggregate([
+        // Step 1: Match tweets based on cursor (for pagination)
         {
             $match: matchStage
         },
+        // Step 2: Join with users collection to get user details
         {
             $lookup: {
                 from: "users",
@@ -110,15 +114,22 @@ const getMostLikedTweets = asyncHandler(async (req, res) => {
                 ]
             }
         },
+        // Step 3: Unwind the user array (since lookup returns an array)
         {
             $unwind: "$user"
         },
+        // Step 4: Sort by bookmark count (descending) then by creation date
         {
-            $sort: { "likes": -1, createdAt: -1 }
+            $sort: { 
+                "bookmarkedBy": -1,  // Most bookmarked first
+                createdAt: -1        // Newer tweets first if same bookmark count
+            }
         },
+        // Step 5: Limit results (add 1 extra for pagination check)
         {
             $limit: parseInt(limit) + 1
         },
+        // Step 6: Project only the fields we need
         {
             $project: {
                 title: 1,
@@ -126,18 +137,21 @@ const getMostLikedTweets = asyncHandler(async (req, res) => {
                 media: 1,
                 tags: 1,
                 views: 1,
-                likeCount: { $size: "$likes" },
+                bookmarkCount: { $size: "$bookmarkedBy" }, // Calculate bookmark count
+                likeCount: { $size: "$likes" },           // Include like count too
                 user: 1,
                 createdAt: 1
             }
         }
     ]);
 
+    // Handle pagination
     const hasMore = tweets.length > limit;
     if (hasMore) {
-        tweets.pop();
+        tweets.pop(); // Remove the extra tweet we fetched
     }
 
+    // Get cursor for next page
     const nextCursor = hasMore ? tweets[tweets.length - 1]._id : null;
 
     return res.status(200).json(
@@ -148,24 +162,37 @@ const getMostLikedTweets = asyncHandler(async (req, res) => {
                 hasMore,
                 nextCursor: nextCursor?.toString()
             },
-            "Most liked tweets fetched successfully"
+            "Most bookmarked tweets fetched successfully"
         )
     );
 });
 
-const getUserLikedTweets = asyncHandler(async (req, res) => {
+/**
+ * Get all tweets bookmarked by the authenticated user
+ * Requires authentication
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with user's bookmarked tweets
+ */
+const getUserBookmarkedTweets = asyncHandler(async (req, res) => {
+    // Extract query parameters
     const { cursor, batch = 12 } = req.query;
     const userId = req.user._id;
 
-    let matchStage = { likes: userId };
+    // Build match stage - find tweets bookmarked by this user
+    let matchStage = { bookmarkedBy: userId };
     if (cursor) {
         matchStage._id = { $lt: new mongoose.Types.ObjectId(cursor) };
     }
 
+    // Aggregate pipeline to get user's bookmarked tweets
     const tweets = await Tweet.aggregate([
+        // Step 1: Match tweets bookmarked by this user
         {
             $match: matchStage
         },
+        // Step 2: Join with users collection
         {
             $lookup: {
                 from: "users",
@@ -183,15 +210,19 @@ const getUserLikedTweets = asyncHandler(async (req, res) => {
                 ]
             }
         },
+        // Step 3: Unwind user array
         {
             $unwind: "$user"
         },
+        // Step 4: Sort by when user bookmarked (most recent first)
         {
             $sort: { createdAt: -1 }
         },
+        // Step 5: Limit results
         {
             $limit: parseInt(batch) + 1
         },
+        // Step 6: Project needed fields
         {
             $project: {
                 title: 1,
@@ -199,6 +230,7 @@ const getUserLikedTweets = asyncHandler(async (req, res) => {
                 media: 1,
                 tags: 1,
                 views: 1,
+                bookmarkCount: { $size: "$bookmarkedBy" },
                 likeCount: { $size: "$likes" },
                 user: 1,
                 createdAt: 1
@@ -206,6 +238,7 @@ const getUserLikedTweets = asyncHandler(async (req, res) => {
         }
     ]);
 
+    // Handle pagination
     const hasMore = tweets.length > batch;
     if (hasMore) {
         tweets.pop();
@@ -221,18 +254,32 @@ const getUserLikedTweets = asyncHandler(async (req, res) => {
                 hasMore,
                 nextCursor: nextCursor?.toString()
             },
-            "User's liked tweets fetched successfully"
+            "User's bookmarked tweets fetched successfully"
         )
     );
 });
 
-const getTweetLikers = asyncHandler(async (req, res) => {
-    const tweetId = req.params.id;
+/**
+ * Get users who bookmarked a specific tweet
+ * Public endpoint - shows who bookmarked a particular tweet
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with users who bookmarked the tweet
+ */
+const getTweetBookmarkers = asyncHandler(async (req, res) => {
+    const { tweetId } = req.params;
     const { limit = 20, cursor } = req.query;
 
+    // Validate tweetId
+    if (!tweetId) {
+        throw new ApiError(400, "Tweet ID is required");
+    }
+
+    // Find tweet and populate bookmarkedBy with user details
     const tweet = await Tweet.findById(tweetId).populate({
-        path: 'likes',
-        select: 'username fullName pfp',
+        path: 'bookmarkedBy',
+        select: 'username fullName pfp', // Only get essential user info
         options: {
             limit: parseInt(limit) + 1,
             ...(cursor && { skip: parseInt(cursor) })
@@ -243,29 +290,31 @@ const getTweetLikers = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Tweet not found");
     }
 
-    const hasMore = tweet.likes.length > limit;
-    const likers = hasMore ? tweet.likes.slice(0, -1) : tweet.likes;
+    // Handle pagination
+    const hasMore = tweet.bookmarkedBy.length > limit;
+    const bookmarkers = hasMore ? tweet.bookmarkedBy.slice(0, -1) : tweet.bookmarkedBy;
     const nextCursor = hasMore ? parseInt(cursor || 0) + limit : null;
 
     return res.status(200).json(
         new ApiResponse(
             200,
             {
-                likers,
+                bookmarkers,
                 hasMore,
                 nextCursor,
-                totalLikes: tweet.likes.length
+                totalBookmarks: tweet.bookmarkedBy.length
             },
-            "Tweet likers fetched successfully"
+            "Tweet bookmarkers fetched successfully"
         )
     );
 });
 
-export    {
-    likeTweet,
-    getLikeCount,
-    checkUserLiked,
-    getMostLikedTweets,
-    getUserLikedTweets,
-    getTweetLikers
- };
+// Export all bookmark controller functions
+export {
+    toggleBookmark,
+    getBookmarkCount,
+    checkUserBookmarked,
+    getMostBookmarkedTweets,
+    getUserBookmarkedTweets,
+    getTweetBookmarkers
+}; 
