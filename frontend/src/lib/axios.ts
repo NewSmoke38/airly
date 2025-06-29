@@ -10,7 +10,29 @@ const axiosInstance = axios.create({
   },
 });
 
-// Add a request interceptor to handle errors
+// Add a request interceptor to include auth token
+axiosInstance.interceptors.request.use(
+  (config) => {
+    // Get auth token from localStorage
+    try {
+      const authData = localStorage.getItem('auth');
+      if (authData) {
+        const { accessToken } = JSON.parse(authData);
+        if (accessToken) {
+          config.headers.Authorization = `Bearer ${accessToken}`;
+        }
+      }
+    } catch (error) {
+      console.error('Error reading auth token:', error);
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add a response interceptor to handle errors
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -22,7 +44,8 @@ axiosInstance.interceptors.response.use(
       
       // You can handle specific status codes here
       if (error.response.status === 401) {
-        // Handle unauthorized access
+        // Handle unauthorized access - clear auth and redirect to login
+        localStorage.removeItem('auth');
         window.location.href = '/login';
       }
     } else if (error.request) {

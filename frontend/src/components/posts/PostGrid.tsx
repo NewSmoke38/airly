@@ -4,7 +4,7 @@ import { Post } from '../../types';
 
 interface PostGridProps {
   posts: Post[];
-  onEditPost: (post: Post) => void;
+  onEditPost?: (post: Post) => void;
   onPostClick: (post: Post) => void;
   onLoadMore: () => void;
   hasMore: boolean;
@@ -88,7 +88,7 @@ export const PostGrid: React.FC<PostGridProps> = ({
         >
           <PostCard
             post={post}
-            onEdit={() => onEditPost(post)}
+            onEdit={onEditPost ? () => onEditPost(post) : undefined}
             onClick={() => onPostClick(post)}
             imageDimensions={imageDimensions[post.id || post._id || '']}
           />

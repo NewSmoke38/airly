@@ -4,7 +4,6 @@ import { HomePage } from './HomePage';
 import { PostDetailModal } from '../modals/PostDetailModal';
 import { Post } from '../../types';
 import { feedService } from '../../services/feedService';
-import { mockPosts } from '../../data/mockPosts';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -14,18 +13,21 @@ export const DashboardPage: React.FC = () => {
   const [currentPostIndex, setCurrentPostIndex] = useState<number>(-1);
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch posts for dashboard
   const fetchPosts = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const response = await feedService.getFeedPosts();
-      setPosts(response.posts);
-      console.log('DashboardPage fetched posts:', response.posts.length, 'posts');
-      console.log('Post IDs:', response.posts.map(p => p._id || p.id));
-    } catch (error) {
-      console.error('API error, falling back to mock posts:', error);
-      setPosts(mockPosts);
+      setPosts(response.posts || []);
+      console.log('DashboardPage fetched posts:', response.posts?.length || 0, 'posts');
+      console.log('Post IDs:', response.posts?.map(p => p._id || p.id) || []);
+    } catch (error: any) {
+      console.error('API error fetching posts:', error);
+      setError(error.response?.data?.message || 'Failed to load posts. Please try again.');
+      setPosts([]);
     } finally {
       setIsLoading(false);
     }
@@ -103,11 +105,17 @@ export const DashboardPage: React.FC = () => {
     console.log('Edit post:', post);
   };
 
+  const handleRetry = () => {
+    fetchPosts();
+  };
+
   return (
     <>
       <HomePage 
         posts={posts}
         isLoading={isLoading}
+        error={error}
+        onRetry={handleRetry}
         onPostClick={handlePostClick} 
         onEditPost={handleEditPost} 
       />

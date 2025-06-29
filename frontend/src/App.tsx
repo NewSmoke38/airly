@@ -63,6 +63,7 @@ function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="dashboard/post/:postId" element={<DashboardPage />} />
           <Route path="profile" element={<ProfilePage onPostClick={() => {}} onEditPost={() => {}} />} />
+          <Route path="profile/:username" element={<ProfilePage onPostClick={() => {}} onEditPost={() => {}} />} />
           <Route path="upload" element={<UploadPage />} />
           <Route path="search" element={<SearchPage />} />
           <Route 

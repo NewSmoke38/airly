@@ -49,6 +49,7 @@ export interface Post {
   edited?: boolean;
   editedAt?: string;
   isLiked?: boolean;
+  isBookmarked?: boolean;
 }
 
 export interface AuthState {

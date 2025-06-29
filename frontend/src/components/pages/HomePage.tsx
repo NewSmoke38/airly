@@ -1,16 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, TrendingUp, Clock, Star } from 'lucide-react';
+import { Search, Filter, TrendingUp, Clock, Star, AlertCircle, RefreshCw } from 'lucide-react';
 import { PostGrid } from '../posts/PostGrid';
 import { Post } from '../../types';
 
 interface HomePageProps {
   posts: Post[];
   isLoading: boolean;
+  error?: string | null;
+  onRetry?: () => void;
   onEditPost: (post: Post) => void;
   onPostClick: (post: Post) => void;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ posts, isLoading, onEditPost, onPostClick }) => {
+export const HomePage: React.FC<HomePageProps> = ({ 
+  posts, 
+  isLoading, 
+  error, 
+  onRetry, 
+  onEditPost, 
+  onPostClick 
+}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
@@ -54,6 +63,43 @@ export const HomePage: React.FC<HomePageProps> = ({ posts, isLoading, onEditPost
         return bDate - aDate;
     }
   });
+
+  // Error State
+  if (error && !isLoading) {
+    return (
+      <div className="space-y-6 p-4">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-sm p-8 border border-gray-100/50 text-center">
+          <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Unable to Load Posts</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          {onRetry && (
+            <button
+              onClick={onRetry}
+              className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl font-medium hover:from-amber-500 hover:to-orange-600 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              <RefreshCw className="h-5 w-5" />
+              <span>Try Again</span>
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Empty State (no posts but no error)
+  if (!isLoading && !error && posts.length === 0) {
+    return (
+      <div className="space-y-6 p-4">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-sm p-8 border border-gray-100/50 text-center">
+          <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Search className="h-8 w-8 text-gray-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">No Posts Available</h2>
+          <p className="text-gray-600">There are no posts to display at the moment. Check back later!</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-4">

@@ -1,28 +1,192 @@
-import React, { useState } from 'react';
-import { Edit, MapPin, Calendar, Users, Award, Eye, Heart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Edit, MapPin, Calendar, Users, Award, Eye, Heart, MoreHorizontal, UserMinus, UserX, Flag } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { useParams, useNavigate } from 'react-router-dom';
 import { RootState } from '../../store';
 import { PostGrid } from '../posts/PostGrid';
-import { mockPosts } from '../../data/mockPosts';
+import { userService } from '../../services/userService';
+import { tweetService } from '../../services/tweetService';
+import { Post } from '../../types';
 
 interface ProfilePageProps {
   onEditPost: (post: any) => void;
   onPostClick: (post: any) => void;
 }
 
+interface UserProfile {
+  _id: string;
+  username: string;
+  fullName: string;
+  email: string;
+  pfp: string;
+  bio?: string;
+  joinedDate: string;
+  followerCount: number;
+  followingCount: number;
+  relationshipStatus: {
+    isOwnProfile: boolean;
+    isFollowing: boolean;
+    isBlocked: boolean;
+  };
+}
+
 export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClick }) => {
-  const { user } = useSelector((state: RootState) => state.auth);
-  const [activeTab, setActiveTab] = useState('posts');
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const { username } = useParams<{ username?: string }>();
+  const navigate = useNavigate();
   
-  if (!user) {
-    return <div>Loading...</div>;
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [userPosts, setUserPosts] = useState<Post[]>([]);
+  const [likedPosts, setLikedPosts] = useState<Post[]>([]);
+  const [activeTab, setActiveTab] = useState('posts');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+
+  // Determine which profile to load
+  const profileUsername = username || currentUser?.username;
+
+  useEffect(() => {
+    if (profileUsername) {
+      fetchProfile();
+    }
+  }, [profileUsername]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showMenu) {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
+
+  const fetchProfile = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Fetch user profile
+      const profileData = await userService.getUserProfile(profileUsername!);
+      setProfile(profileData);
+      setIsFollowing(profileData.relationshipStatus.isFollowing);
+      setIsBlocked(profileData.relationshipStatus.isBlocked);
+
+      // Fetch user posts
+      const postsData = await userService.getUserPosts(profileUsername!);
+      setUserPosts(postsData.posts || []);
+
+      // Fetch liked posts if it's the current user's profile
+      if (profileData.relationshipStatus.isOwnProfile) {
+        try {
+          const likedData = await tweetService.getUserLikedTweets();
+          setLikedPosts(likedData.data.tweets || []);
+        } catch (error) {
+          console.error('Error fetching liked posts:', error);
+          setLikedPosts([]);
+        }
+      }
+
+    } catch (error: any) {
+      console.error('Error fetching profile:', error);
+      setError(error.response?.data?.message || 'Failed to load profile');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFollow = async () => {
+    if (!profile) return;
+    
+    try {
+      const response = await userService.toggleFollow(profile._id);
+      setIsFollowing(response.isFollowing);
+      
+      // Update follower count
+      setProfile(prev => prev ? {
+        ...prev,
+        followerCount: response.isFollowing 
+          ? prev.followerCount + 1 
+          : prev.followerCount - 1
+      } : null);
+      
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+    }
+  };
+
+  const handleBlock = async () => {
+    if (!profile) return;
+    
+    try {
+      const response = await userService.toggleBlock(profile._id);
+      setIsBlocked(response.isBlocked || false);
+      
+      // If blocked, also unfollow
+      if (response.isBlocked) {
+        setIsFollowing(false);
+        setProfile(prev => prev ? {
+          ...prev,
+          followerCount: Math.max(0, prev.followerCount - 1)
+        } : null);
+      }
+      
+      setShowMenu(false);
+    } catch (error) {
+      console.error('Error toggling block:', error);
+    }
+  };
+
+  const handleReport = () => {
+    // TODO: Implement report functionality
+    console.log('Report user:', profile?.username);
+    setShowMenu(false);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-6">
+          <div className="animate-pulse">
+            <div className="flex items-start space-x-6">
+              <div className="w-32 h-32 bg-gray-200 rounded-full"></div>
+              <div className="flex-1">
+                <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  // Filter posts by the current user (using username since that's what we have in Post type)
-  const userPosts = mockPosts.filter(post => post.user.username === user.username);
-  const likedPosts = mockPosts; // For now, show all posts as liked posts
-  const totalLikes = userPosts.reduce((sum, post) => sum + post.likes, 0);
-  const totalViews = userPosts.length * 150; // Mock view count
+  if (error || !profile) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Profile Not Found</h2>
+          <p className="text-gray-600 mb-4">{error || 'The user you are looking for does not exist.'}</p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="px-6 py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors"
+          >
+            Go Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const totalViews = userPosts.reduce((sum, post) => sum + (post.views || 0), 0);
+  const totalLikes = userPosts.reduce((sum, post) => sum + (post.likes || 0), 0);
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -31,8 +195,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
         <div className="flex items-start space-x-6">
           <div className="relative">
             <img
-              src={user.pfp}
-              alt={user.fullName}
+              src={profile.pfp}
+              alt={profile.fullName}
               className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
             />
             <div className="absolute -bottom-2 -right-2 bg-green-500 w-8 h-8 rounded-full border-4 border-white"></div>
@@ -41,17 +205,66 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
           <div className="flex-1">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-1">{user.fullName}</h1>
-                <p className="text-gray-600 text-lg">@{user.username}</p>
+                <h1 className="text-3xl font-bold text-gray-900 mb-1">{profile.fullName}</h1>
+                <p className="text-gray-600 text-lg">@{profile.username}</p>
               </div>
-              <button className="flex items-center space-x-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
-                <Edit className="w-4 h-4" />
-                <span className="font-medium">Edit Profile</span>
-              </button>
+              
+              <div className="flex items-center space-x-3">
+                {profile.relationshipStatus.isOwnProfile ? (
+                  <button className="flex items-center space-x-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
+                    <Edit className="w-4 h-4" />
+                    <span className="font-medium">Edit Profile</span>
+                  </button>
+                ) : (
+                  <>
+                    {!isBlocked && (
+                      <button
+                        onClick={handleFollow}
+                        className={`px-6 py-3 rounded-xl font-medium transition-colors ${
+                          isFollowing
+                            ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                            : 'bg-amber-500 hover:bg-amber-600 text-white'
+                        }`}
+                      >
+                        {isFollowing ? 'Following' : 'Follow'}
+                      </button>
+                    )}
+                    
+                    {/* Three Dot Menu */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowMenu(!showMenu)}
+                        className="p-3 hover:bg-gray-100 rounded-xl transition-colors"
+                      >
+                        <MoreHorizontal className="w-5 h-5 text-gray-600" />
+                      </button>
+
+                      {showMenu && (
+                        <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 min-w-48 py-1">
+                          <button
+                            onClick={handleBlock}
+                            className="w-full text-left px-4 py-2 hover:bg-red-50 transition-colors flex items-center space-x-2 text-red-600"
+                          >
+                            <UserX className="w-4 h-4" />
+                            <span>{isBlocked ? 'Unblock' : 'Block'} @{profile.username}</span>
+                          </button>
+                          <button
+                            onClick={handleReport}
+                            className="w-full text-left px-4 py-2 hover:bg-red-50 transition-colors flex items-center space-x-2 text-red-600"
+                          >
+                            <Flag className="w-4 h-4" />
+                            <span>Report @{profile.username}</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
             
             <p className="text-gray-700 mb-6 leading-relaxed">
-              {user.bio || "Creative enthusiast sharing moments and inspirations. Always exploring new perspectives and connecting with amazing people around the world."}
+              {profile.bio || "Creative enthusiast sharing moments and inspirations. Always exploring new perspectives and connecting with amazing people around the world."}
             </p>
             
             <div className="flex items-center space-x-6 text-sm text-gray-600">
@@ -61,7 +274,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
               </div>
               <div className="flex items-center space-x-1">
                 <Calendar className="w-4 h-4" />
-                <span>Joined {new Date(user.joinedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                <span>Joined {profile.joinedDate}</span>
               </div>
             </div>
           </div>
@@ -82,7 +295,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
             <div className="text-sm text-gray-600">Views</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">2.4k</div>
+            <div className="text-2xl font-bold text-gray-900">{profile.followerCount}</div>
             <div className="text-sm text-gray-600">Followers</div>
           </div>
         </div>
@@ -101,39 +314,41 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
           >
             <div className="flex items-center justify-center space-x-2">
               <Award className="w-4 h-4" />
-              <span>My Posts ({userPosts.length})</span>
+              <span>Posts ({userPosts.length})</span>
             </div>
           </button>
-          <button
-            onClick={() => setActiveTab('liked')}
-            className={`flex-1 px-6 py-4 text-center font-medium transition-colors ${
-              activeTab === 'liked'
-                ? 'text-amber-600 border-b-2 border-amber-600 bg-amber-50/50'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
-          >
-            <div className="flex items-center justify-center space-x-2">
-              <Heart className="w-4 h-4" />
-              <span>Liked Posts</span>
-            </div>
-          </button>
+          {profile.relationshipStatus.isOwnProfile && (
+            <button
+              onClick={() => setActiveTab('liked')}
+              className={`flex-1 px-6 py-4 text-center font-medium transition-colors ${
+                activeTab === 'liked'
+                  ? 'text-amber-600 border-b-2 border-amber-600 bg-amber-50/50'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <Heart className="w-4 h-4" />
+                <span>Liked Posts</span>
+              </div>
+            </button>
+          )}
         </div>
         
         <div className="p-6">
           {activeTab === 'posts' && (
             <PostGrid 
               posts={userPosts} 
-              onEditPost={onEditPost} 
+              onEditPost={profile.relationshipStatus.isOwnProfile ? onEditPost : undefined} 
               onPostClick={onPostClick}
               onLoadMore={() => {}}
               hasMore={false}
               isLoading={false}
             />
           )}
-          {activeTab === 'liked' && (
+          {activeTab === 'liked' && profile.relationshipStatus.isOwnProfile && (
             <PostGrid 
               posts={likedPosts} 
-              onEditPost={onEditPost} 
+              onEditPost={undefined} 
               onPostClick={onPostClick}
               onLoadMore={() => {}}
               hasMore={false}

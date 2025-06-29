@@ -28,6 +28,29 @@ interface AuthResponse {
   refreshToken: string;
 }
 
+interface UserProfile {
+  _id: string;
+  username: string;
+  fullName: string;
+  email: string;
+  pfp: string;
+  bio?: string;
+  joinedDate: string;
+  followerCount: number;
+  followingCount: number;
+  relationshipStatus: {
+    isOwnProfile: boolean;
+    isFollowing: boolean;
+    isBlocked: boolean;
+  };
+}
+
+interface RelationshipResponse {
+  isFollowing: boolean;
+  isBlocked?: boolean;
+  message: string;
+}
+
 export const userService = {
   async register(data: RegisterData): Promise<AuthResponse> {
     const formData = new FormData();
@@ -47,6 +70,42 @@ export const userService = {
 
   async login(data: LoginData): Promise<AuthResponse> {
     const response = await axiosInstance.post<ApiResponse<AuthResponse>>('users/login', data);
+    return response.data.data;
+  },
+
+  // Profile functions
+  async getUserProfile(username: string): Promise<UserProfile> {
+    const response = await axiosInstance.get<ApiResponse<UserProfile>>(`profile/u/${username}`);
+    return response.data.data;
+  },
+
+  async getOwnProfile(): Promise<UserProfile> {
+    const response = await axiosInstance.get<ApiResponse<UserProfile>>('profile/me');
+    return response.data.data;
+  },
+
+  async getUserPosts(username: string, cursor?: string, batch = 12) {
+    const params = new URLSearchParams();
+    if (cursor) params.append('cursor', cursor);
+    params.append('batch', batch.toString());
+
+    const response = await axiosInstance.get(`profile/u/${username}/posts?${params.toString()}`);
+    return response.data.data;
+  },
+
+  // Social functions
+  async toggleFollow(userId: string): Promise<RelationshipResponse> {
+    const response = await axiosInstance.post<ApiResponse<RelationshipResponse>>(`users/${userId}/follow`);
+    return response.data.data;
+  },
+
+  async toggleBlock(userId: string): Promise<RelationshipResponse> {
+    const response = await axiosInstance.post<ApiResponse<RelationshipResponse>>(`users/${userId}/block`);
+    return response.data.data;
+  },
+
+  async getUserRelationship(userId: string) {
+    const response = await axiosInstance.get(`users/${userId}/relationship`);
     return response.data.data;
   },
 }; 

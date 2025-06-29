@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, ArrowLeft, AlertCircle, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import { Upload, ArrowLeft, AlertCircle, CheckCircle, Image as ImageIcon, X } from 'lucide-react';
 import { tweetService } from '../../services/tweetService';
 
 interface ValidationErrors {
   title?: string;
   content?: string;
   media?: string;
+  tags?: string;
 }
 
 export const UploadPage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [media, setMedia] = useState<File | null>(null);
   const [type, setType] = useState('image');
   const [isUploading, setIsUploading] = useState(false);
@@ -24,6 +28,22 @@ export const UploadPage: React.FC = () => {
   const MAX_CONTENT_LENGTH = 280;
   const MAX_MEDIA_SIZE = 10 * 1024 * 1024; // 10MB in bytes
   const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+
+  // Popular tag suggestions
+  const popularTags = [
+    'photography', 'art', 'nature', 'travel', 'food', 'lifestyle', 'fashion', 
+    'technology', 'design', 'architecture', 'music', 'fitness', 'beauty', 
+    'inspiration', 'creativity', 'minimalism', 'vintage', 'modern', 'abstract'
+  ];
+
+  // Filter tag suggestions based on input
+  const getTagSuggestions = () => {
+    if (!tagInput.trim()) return popularTags.slice(0, 6);
+    return popularTags.filter(tag => 
+      tag.toLowerCase().includes(tagInput.toLowerCase()) && 
+      !tags.includes(tag)
+    ).slice(0, 6);
+  };
 
   // Validation functions
   const validateTitle = (value: string): string | undefined => {
@@ -64,6 +84,13 @@ export const UploadPage: React.FC = () => {
     return undefined;
   };
 
+  const validateTags = (tagArray: string[]): string | undefined => {
+    if (tagArray.length > 10) {
+      return 'Maximum 10 tags allowed';
+    }
+    return undefined;
+  };
+
   // Real-time validation handlers
   const handleTitleChange = (value: string) => {
     setTitle(value);
@@ -75,6 +102,39 @@ export const UploadPage: React.FC = () => {
     setContent(value);
     const error = validateContent(value);
     setValidationErrors(prev => ({ ...prev, content: error }));
+  };
+
+  const handleTagsChange = (newTags: string[]) => {
+    setTags(newTags);
+    const error = validateTags(newTags);
+    setValidationErrors(prev => ({ ...prev, tags: error }));
+  };
+
+  // Tag handling functions
+  const addTag = (tag: string) => {
+    const trimmedTag = tag.trim().toLowerCase();
+    if (trimmedTag && !tags.includes(trimmedTag) && tags.length < 10) {
+      const newTags = [...tags, trimmedTag];
+      handleTagsChange(newTags);
+      setTagInput('');
+      setShowTagSuggestions(false);
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    const newTags = tags.filter(tag => tag !== tagToRemove);
+    handleTagsChange(newTags);
+  };
+
+  const handleTagInputKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      if (tagInput.trim()) {
+        addTag(tagInput);
+      }
+    } else if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
+      removeTag(tags[tags.length - 1]);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,11 +164,13 @@ export const UploadPage: React.FC = () => {
     const titleError = validateTitle(title);
     const contentError = validateContent(content);
     const mediaError = validateMedia(media);
+    const tagsError = validateTags(tags);
 
     const errors: ValidationErrors = {};
     if (titleError) errors.title = titleError;
     if (contentError) errors.content = contentError;
     if (mediaError) errors.media = mediaError;
+    if (tagsError) errors.tags = tagsError;
 
     setValidationErrors(errors);
 
@@ -122,7 +184,8 @@ export const UploadPage: React.FC = () => {
       const uploadData = {
         title: title.trim(),
         content: content.trim(),
-        media: media!
+        media: media!,
+        tags: tags
       };
       
       await tweetService.createTweet(uploadData);
@@ -251,6 +314,88 @@ export const UploadPage: React.FC = () => {
               <span className={`text-xs ${getCharacterCountColor(content.length, MAX_CONTENT_LENGTH)}`}>
                 {content.length}/{MAX_CONTENT_LENGTH}
               </span>
+            </div>
+          </div>
+
+          {/* Tags Section */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tags <span className="text-gray-400">(optional)</span>
+            </label>
+            
+            {/* Tag Display */}
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium"
+                  >
+                    #{tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag)}
+                      className="ml-2 text-amber-600 hover:text-amber-800 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Tag Input */}
+            <div className="relative">
+              <input
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleTagInputKeyDown}
+                onFocus={() => setShowTagSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 ${
+                  validationErrors.tags
+                    ? 'border-red-300 bg-red-50'
+                    : 'border-gray-200'
+                }`}
+                placeholder="Add tags (press Enter or comma to add)"
+                maxLength={50}
+              />
+
+              {/* Tag Suggestions Dropdown */}
+              {showTagSuggestions && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto">
+                  {getTagSuggestions().map((suggestion, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => addTag(suggestion)}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors first:rounded-t-xl last:rounded-b-xl"
+                    >
+                      <span className="text-gray-600">#</span>
+                      <span className="text-gray-900">{suggestion}</span>
+                    </button>
+                  ))}
+                  {getTagSuggestions().length === 0 && (
+                    <div className="px-4 py-2 text-gray-500 text-sm">
+                      No suggestions found
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-1 flex justify-between items-center">
+              {validationErrors.tags ? (
+                <div className="flex items-center space-x-2 text-red-600">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="text-sm">{validationErrors.tags}</span>
+                </div>
+              ) : (
+                <span className="text-sm text-gray-500">
+                  {tags.length}/10 tags • Press Enter or comma to add
+                </span>
+              )}
             </div>
           </div>
 
