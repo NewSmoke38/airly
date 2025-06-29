@@ -3,8 +3,8 @@ import { ApiError } from "../utils/ApiError.js";
 import { Tweet } from "../models/tweet.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { User } from "../models/user.model.js";
 
 
 const createTweet = asyncHandler(async (req, res) => {
@@ -12,17 +12,15 @@ const createTweet = asyncHandler(async (req, res) => {
 
 
 console.log("req.user:", req.user);
-    // Validate required fields
     if (!title || !content) {
         throw new ApiError(400, "Title and content are required");
     }
 
-    //  media upload 
     let mediaUrl = "";
 
     if (req.file) {
 
-        const uploadResult = await uploadOnCloudinary(req.file.path);
+const uploadResult = await uploadOnCloudinary(req.file.path);
         mediaUrl = uploadResult.url;
 
     } else {
@@ -56,13 +54,11 @@ console.log("req.user:", req.user);
 const deleteTweet = asyncHandler(async (req, res) => {
     const tweetId = req.params.id;
 
-    // Find the tweet
     const tweet = await Tweet.findById(tweetId);
     if (!tweet) {
         throw new ApiError(404, "Tweet not found");
     }
 
-    // Check if the logged-in user is the owner
     if (!tweet.user || !req.user || !req.user._id) {
     throw new ApiError(403, "Not authorized or tweet/user missing");
 } 
@@ -70,7 +66,6 @@ const deleteTweet = asyncHandler(async (req, res) => {
         throw new ApiError(403, "You are not authorized to delete this tweet");
     }
 
-    // Delete the tweet
     await tweet.deleteOne();
 
     return res
@@ -137,13 +132,11 @@ const searchTweetsByTags = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Tags parameter is required");
     }
 
-    // Convert tags to array and normalize
     const tagArray = Array.isArray(tags) ? tags : tags.split(',').map(tag => tag.trim().toLowerCase());
-    
     const limit = parseInt(batch) + 1;
 
     let matchStage = {
-        tags: { $in: tagArray }  // Find tweets that have any of the specified tags
+        tags: { $in: tagArray }  
     };
 
     if (cursor) {
@@ -152,9 +145,9 @@ const searchTweetsByTags = asyncHandler(async (req, res) => {
         };
     }
 
-    const tweets = await Tweet.aggregate([
+const tweets = await Tweet.aggregate([
         {
-            $lookup: {
+             $lookup: {
                 from: "users",
                 localField: "user",
                 foreignField: "_id",
@@ -166,8 +159,9 @@ const searchTweetsByTags = asyncHandler(async (req, res) => {
                             fullName: 1,
                             pfp: 1
                         }
+                  
                     }
-                ]
+            ]
             }
         },
         {
@@ -217,21 +211,145 @@ const searchTweetsByTags = asyncHandler(async (req, res) => {
     );
 });
 
+const searchContent = asyncHandler(async (req, res) => {
+    const { q: query, type = 'all', cursor, batch = 20 } = req.query;
+
+    if (!query || query.trim() === '') {
+        throw new ApiError(400, "Search query is required");
+    }
+
+    const searchQuery = query.trim();
+    const limit = parseInt(batch) + 1;
+    const searchType = type.toLowerCase();
+
+    let results = {
+        tweets: [],
+        users: [],
+        hasMore: false,
+        nextCursor: null
+    };
+
+    if (searchType === 'all' || searchType === 'tweets') {
+        let tweetMatchStage = {
+            $or: [
+                { title: { $regex: searchQuery, $options: 'i' } },
+                { content: { $regex: searchQuery, $options: 'i' } },
+                { tags: { $in: [new RegExp(searchQuery, 'i')] } }
+            ]
+        };
+
+        if (cursor) {
+            tweetMatchStage._id = {
+                $lt: new mongoose.Types.ObjectId(cursor)
+            };
+        }
+
+
+
+        const tweets = await Tweet.aggregate([
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "user",
+                    foreignField: "_id",
+                    as: "user",
+                    pipeline: [
+                        {
+                            $project: {
+                                username: 1,
+                                fullName: 1,
+                                pfp: 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $unwind: "$user"
+            },
+            {
+                $match: tweetMatchStage
+            },
+            {
+                $sort: { createdAt: -1 }
+            },
+            {
+                $limit: limit
+            },
+            {
+                $project: {
+                    _id: 1,
+                    title: 1,
+                    content: 1,
+                    media: 1,
+                    tags: 1,
+                    likes: { $size: "$likes" },
+                    views: 1,
+                    commentCount: 1,
+                    user: 1,
+                    createdAt: 1,
+                    edited: 1,
+                    editedAt: 1
+                }
+            }
+        ]);
+
+        results.tweets = tweets;
+        results.hasMore = tweets.length > batch;
+        
+        if (results.hasMore) {
+            results.tweets.pop();
+        }
+        
+        results.nextCursor = results.hasMore ? results.tweets[results.tweets.length - 1]._id : null;
+    }
+
+    if (searchType === 'all' || searchType === 'users') {
+        const userMatchStage = {
+            $or: [
+                { username: { $regex: searchQuery, $options: 'i' } },
+                { fullName: { $regex: searchQuery, $options: 'i' } }
+            ]
+        };
+
+        const users = await User.find(userMatchStage)
+        .select('username fullName pfp joinedAt')
+        .limit(10)
+            .sort({ joinedAt: -1 });
+
+        results.users = users;
+    }
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                ...results,
+                searchQuery,
+                searchType,
+                totalResults: results.tweets.length + results.users.length
+            },
+         "Search completed successfully"
+       
+        )
+    );
+});
+
 const getPopularTags = asyncHandler(async (req, res) => {
     const { limit = 20 } = req.query;
 
     const popularTags = await Tweet.aggregate([
         {
-            $unwind: "$tags"  // Separate each tag into its own document
+            $unwind: "$tags" 
         },
         {
             $group: {
                 _id: "$tags",
-                count: { $sum: 1 }  // Count occurrences of each tag
+                count: { $sum: 1 } 
             }
         },
         {
-            $sort: { count: -1 }  // Sort by most popular first
+            $sort: { count: -1 }  
         },
         {
             $limit: parseInt(limit)
@@ -261,6 +379,7 @@ export {
     deleteTweet,
     editTweet,
     searchTweetsByTags,
+    searchContent,
     getPopularTags
-}
+   }
 

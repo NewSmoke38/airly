@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getOwnProfile, updateUserSocials, updateUserInfo, getUserByUsername, getPostsByUsername } from "../controllers/profile.controller.js";
-import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { verifyJWT, optionalAuth } from "../middlewares/auth.middleware.js";
 import { uploadPfp } from "../middlewares/multer.middleware.js";
 
 const router = Router();
@@ -9,8 +9,8 @@ router.get("/me", verifyJWT, getOwnProfile);
 router.patch("/socials", verifyJWT, updateUserSocials);
 router.patch("/personal", verifyJWT, uploadPfp.single("pfp"), updateUserInfo);
 // for other users
-// Public profile routes (no auth required)
-router.get("/u/:username", getUserByUsername);
-router.get("/u/:username/posts", getPostsByUsername);
+// Profile routes with optional auth
+router.get("/u/:username", optionalAuth, getUserByUsername);
+router.get("/u/:username/posts", optionalAuth, getPostsByUsername);
 
 export default router;

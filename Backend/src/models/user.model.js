@@ -62,6 +62,27 @@ const userSchema = new Schema(
     joinedAt: {
     type: Date,
     default: Date.now
+    },
+    // Social features
+    followers: [{
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        default: []
+    }],
+    following: [{
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        default: []
+    }],
+    blockedUsers: [{
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        default: []
+    }],
+    bio: {
+        type: String,
+        maxlength: 160,
+        trim: true
     }
 
 },
@@ -115,7 +136,10 @@ userSchema.methods.getJoinedDate = function() {
     }).format(this.joinedAt);
 };
 
-// indexes for my cutie users hehe
-userSchema.index({ email: 1 }); // login, password resets
-userSchema.index({ role: 1 });  // for admin filtering or role-based features
+userSchema.index({ email: 1 }); 
+userSchema.index({ role: 1 });  
+userSchema.index({ username: 1 }); 
+userSchema.index({ followers: 1 }); 
+userSchema.index({ following: 1 }); 
+
 export const User = mongoose.model("User", userSchema)

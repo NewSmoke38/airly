@@ -14,8 +14,8 @@ const getOwnProfile = asyncHandler(async (req, res) => {
     }
     
 
-    return res
-    .status(200)
+return res
+     .status(200)
     .json(
         new ApiResponse(
             200,
@@ -23,14 +23,15 @@ const getOwnProfile = asyncHandler(async (req, res) => {
              joinedAt: user.getJoinedDate()
              },
               "User profile fetched successfully"
-            )
+     )
+
     );
 });
 
 
 const updateUserInfo = asyncHandler(async (req, res) => {
-    const { fullName, username, email, password } = req.body;
-    let updateObj = {};
+const { fullName, username, email, password } = req.body;
+     let updateObj = {};
 
     if (req.file) {
         const uploadResult = await uploadOnCloudinary(req.file.path);
@@ -38,32 +39,36 @@ const updateUserInfo = asyncHandler(async (req, res) => {
     }
 
     if (
-        (!fullName || fullName.trim() === "") &&
-        (!username || username.trim() === "") &&
+         (!fullName || fullName.trim() === "") &&
+         (!username || username.trim() === "") &&
         (!email || email.trim() === "") &&
         !password &&
         !updateObj.pfp
     ) {
-        const user = await User.findById(req.user._id).select("-password -refreshToken");
+    const user = await User.findById(req.user._id).select("-password -refreshToken");
         return res.status(200).json(
             new ApiResponse(200, user, "No personal info updated (none provided)")
         );
     }
 
+
+
     if (username) {
-        const existingUser = await User.findOne({ username: username.toLowerCase(), _id: { $ne: req.user._id } });
+        const existingUser = await User
+        .findOne({ username: username.toLowerCase(), _id: { $ne: req.user._id } });
         if (existingUser) {
             throw new ApiError(409, "Username already taken");
         }
-        updateObj.username = username.toLowerCase();
+    updateObj.username = username.toLowerCase();
     }
     if (email) {
-        const existingUser = await User.findOne({ email: email.toLowerCase(), _id: { $ne: req.user._id } });
+    const existingUser = await User.findOne({ email: email.toLowerCase(), _id: { $ne: req.user._id } });
         if (existingUser) {
             throw new ApiError(409, "Email already in use");
         }
         updateObj.email = email.toLowerCase();
     }
+       
     if (fullName) updateObj.fullName = fullName;
 
     if (password) {
@@ -81,7 +86,7 @@ const updateUserInfo = asyncHandler(async (req, res) => {
     );
 
     if (!user) {
-        throw new ApiError(404, "User not found");
+  throw new ApiError(404, "User not found");
     }
 
     return res
@@ -91,12 +96,13 @@ const updateUserInfo = asyncHandler(async (req, res) => {
     );
 });
 
-const updateUserSocials = asyncHandler(async (req, res) => {
-    const socials = req.body.socials; // like - twitter, github, linkedin
+
+    const updateUserSocials = asyncHandler(async (req, res) => {
+    const socials = req.body.socials; /// like - twitter, github, linkedin
 
     if (!socials || typeof socials !== "object" || Object.keys(socials).length === 0) {
         const user = await User.findById(req.user._id).select("-password -refreshToken");
-        return res.status(200).json(
+    return res.status(200).json(
             new ApiResponse(200, user, "No social links updated (none provided)")
         );
     }
@@ -106,6 +112,7 @@ const updateUserSocials = asyncHandler(async (req, res) => {
         { $set: { social: socials } },
         { new: true, runValidators: true, select: "-password -refreshToken" }
     );
+
 
     if (!user) {
         throw new ApiError(404, "User not found");
@@ -122,6 +129,7 @@ const updateUserSocials = asyncHandler(async (req, res) => {
 
 const getUserByUsername = asyncHandler(async (req, res) => {
     const { username } = req.params;
+    const currentUserId = req.user?._id; 
 
     const user = await User.findOne({ username: username.toLowerCase() })
         .select("-password -refreshToken");
@@ -130,12 +138,34 @@ const getUserByUsername = asyncHandler(async (req, res) => {
         throw new ApiError(404, "User not found");
     }
 
+    const followerCount = user.followers?.length || 0;
+    const followingCount = user.following?.length || 0;
+
+    let relationshipStatus = {
+        isOwnProfile: false,
+    isFollowing: false,
+        isBlocked: false
+    };
+
+    if (currentUserId) {
+        if (currentUserId.toString() === user._id.toString()) {
+            relationshipStatus.isOwnProfile = true;
+        } else {
+            const currentUser = await User.findById(currentUserId);
+            relationshipStatus.isFollowing = currentUser.following.includes(user._id);
+            relationshipStatus.isBlocked = currentUser.blockedUsers.includes(user._id);
+        }
+    }
+
     return res.status(200).json(
         new ApiResponse(
             200, 
             {
                 ...user.toObject(),
-                joinedDate: user.getJoinedDate()
+                joinedDate: user.getJoinedDate(),
+                followerCount,
+                followingCount,
+                relationshipStatus
             },
             "User profile fetched successfully"
         )
@@ -146,7 +176,7 @@ const getPostsByUsername = asyncHandler(async (req, res) => {
     const { username } = req.params;
     const { cursor, batch = 12 } = req.query;
 
-    const user = await User.findOne({ username: username.toLowerCase() });
+const user = await User.findOne({ username: username.toLowerCase() });
     if (!user) {
         throw new ApiError(404, "User not found");
     }
@@ -203,12 +233,10 @@ const getPostsByUsername = asyncHandler(async (req, res) => {
         }
     ]);
 
-    const hasMore = posts.length > batch;    // If we got more than batch, there are more posts after this.
-    const nextCursor = hasMore ? posts[posts.length - 2]._id : null;   // If there are more posts, save the _id of the last real post (not the extra one) to use as the next cursor.
-
-    
+    const hasMore = posts.length > batch;    
+    const nextCursor = hasMore ? posts[posts.length - 2]._id : null;   
     if (hasMore) {
-        posts.pop();       // only to remove the extra post for the new batch and then it becomes the first in next batch
+        posts.pop();       
     }
 
     return res.status(200).json(

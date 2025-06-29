@@ -8,15 +8,12 @@ export const verifyJWT = asyncHandler(async(req, _,
 try {
           const token = 
           req.cookies?.accessToken ||
-          req.headers.authorization?.replace("Bearer ", "");   // ya toh cookies se token niklega ya toh auth bearer sey=
-             // leaving bearer we get the token
+          req.headers.authorization?.replace("Bearer ", "");   
    
           if (!token) {
              throw new ApiError(401, "Unauthorized request")
           }
    
-      // if we get tokens (yayyyy)
-      // then check if it is valid or not (spy mode)
       const decodedToken = jwt.verify(token, process.env
          .ACCESS_TOKEN_SECRET)   
 
@@ -30,9 +27,32 @@ try {
    
        req.user = user;
        next()   
-                  /// middleware verifyJWT's work is done so jump to the next thingy
      } catch (error) {
        console.error(error);   
            throw new ApiError(401, "Invalid access thrown")
         }
+})
+
+export const optionalAuth = asyncHandler(async(req, _, next) => {
+    try {
+        const token = 
+            req.cookies?.accessToken ||
+            req.headers.authorization?.replace("Bearer ", "");
+
+        if (!token) {
+            return next();
+        }
+
+        const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const user = await User.findById(decodedToken?._id).select("-password -refreshToken");
+        
+        if (user) {
+            req.user = user;
+        }
+        
+        next();
+    } catch (error) {
+        console.log("Optional auth failed:", error.message);
+        next();
+    }
 })
