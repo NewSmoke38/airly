@@ -308,6 +308,29 @@ const getTweetBookmarkers = asyncHandler(async (req, res) => {
         )
     );
 });
+const getBookmarkCount = asyncHandler(async (req, res) => {
+    const { tweetId } = req.params;
+
+    if (!tweetId) {
+        throw new ApiError(400, "Tweet ID is required");
+    }
+
+    const tweet = await Tweet.findById(tweetId).select('bookmarkedBy');
+    
+    if (!tweet) {
+        throw new ApiError(404, "Tweet not found");
+    }
+
+    const bookmarkCount = tweet.bookmarkedBy.length;
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            { bookmarkCount },
+            "Bookmark count fetched successfully"
+        )
+    );
+});
 
 // Export all bookmark controller functions
 export {
