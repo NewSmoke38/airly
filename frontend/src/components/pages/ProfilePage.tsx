@@ -335,26 +335,28 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
         </div>
         
         <div className="p-6">
-          {activeTab === 'posts' && (
-            <PostGrid 
-              posts={userPosts} 
-              onEditPost={profile.relationshipStatus.isOwnProfile ? onEditPost : undefined} 
-              onPostClick={onPostClick}
-              onLoadMore={() => {}}
-              hasMore={false}
-              isLoading={false}
-            />
-          )}
-          {activeTab === 'liked' && profile.relationshipStatus.isOwnProfile && (
-            <PostGrid 
-              posts={likedPosts} 
-              onEditPost={undefined} 
-              onPostClick={onPostClick}
-              onLoadMore={() => {}}
-              hasMore={false}
-              isLoading={false}
-            />
-          )}
+                     {activeTab === 'posts' && (
+             <PostGrid 
+               posts={userPosts} 
+               onEditPost={profile.relationshipStatus.isOwnProfile ? onEditPost : undefined} 
+               onPostClick={onPostClick}
+               onLoadMore={() => {}}
+               hasMore={false}
+               isLoading={false}
+               className="masonry-grid-profile"
+             />
+           )}
+                     {activeTab === 'liked' && profile.relationshipStatus.isOwnProfile && (
+             <PostGrid 
+               posts={likedPosts} 
+               onEditPost={undefined} 
+               onPostClick={onPostClick}
+               onLoadMore={() => {}}
+               hasMore={false}
+               isLoading={false}
+               className="masonry-grid-profile"
+             />
+           )}
         </div>
       </div>
     </div>

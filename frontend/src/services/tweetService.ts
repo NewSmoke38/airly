@@ -165,18 +165,38 @@ class TweetService {
     return response.data;
   }
 
-  // Comments functionality (placeholder for future implementation)
+  // Comments functionality
   async getComments(tweetId: string, cursor?: string, batch = 20): Promise<ApiResponse<{ comments: any[]; hasMore: boolean; nextCursor?: string }>> {
     const params = new URLSearchParams();
     if (cursor) params.append('cursor', cursor);
     params.append('batch', batch.toString());
 
-    const response = await axios.get(`/comments/tweets/${tweetId}/comments?${params.toString()}`);
+    const response = await axios.get(`/tweets/${tweetId}/comments?${params.toString()}`);
     return response.data;
   }
 
   async createComment(tweetId: string, content: string): Promise<ApiResponse<any>> {
-    const response = await axios.post(`/comments/tweets/${tweetId}/comments`, { content });
+    const response = await axios.post(`/tweets/${tweetId}/comments`, { content });
+    return response.data;
+  }
+
+  async getCommentCount(tweetId: string): Promise<ApiResponse<{ count: number }>> {
+    const response = await axios.get(`/tweets/${tweetId}/comments/count`);
+    return response.data;
+  }
+
+  async editComment(commentId: string, content: string): Promise<ApiResponse<any>> {
+    const response = await axios.patch(`/comments/${commentId}`, { content });
+    return response.data;
+  }
+
+  async deleteComment(commentId: string): Promise<ApiResponse<any>> {
+    const response = await axios.delete(`/comments/${commentId}`);
+    return response.data;
+  }
+
+  async likeComment(commentId: string): Promise<ApiResponse<any>> {
+    const response = await axios.post(`/comments/${commentId}/like`);
     return response.data;
   }
 

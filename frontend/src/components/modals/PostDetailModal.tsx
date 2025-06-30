@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { X, Heart, MessageCircle, Share, Bookmark, MoreHorizontal, ArrowLeft, ArrowRight, Eye, Link, Flag, UserMinus, UserX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Post } from '../../types';
 import { tweetService } from '../../services/tweetService';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
 
 interface PostDetailModalProps {
   post: Post;
@@ -13,6 +11,24 @@ interface PostDetailModalProps {
   onNext?: () => void;
   hasPrevious?: boolean;
   hasNext?: boolean;
+  onPostUpdate?: (updatedPost: Partial<Post>) => void;
+}
+
+interface Comment {
+  _id: string;
+  content: string;
+  user: {
+    _id: string;
+    username: string;
+    fullName: string;
+    pfp: string;
+  };
+  likes: number;
+  likedBy: any[];
+  replyCount: number;
+  createdAt: string;
+  edited?: boolean;
+  editedAt?: string;
 }
 
 export const PostDetailModal: React.FC<PostDetailModalProps> = ({
@@ -21,7 +37,8 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
   onPrevious,
   onNext,
   hasPrevious,
-  hasNext
+  hasNext,
+  onPostUpdate
 }) => {
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
@@ -30,8 +47,51 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
   const [showMenu, setShowMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [newComment, setNewComment] = useState('');
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [commentCount, setCommentCount] = useState(post.comments || 0);
+  const modalRef = useRef<HTMLDivElement>(null);
 
-  const userHandle = post.user?.username || post.author?.email?.split('@')[0] || '';
+  const userHandle = post.user?.username || post.author?.name?.toLowerCase().replace(/\s+/g, '') || 'user';
+  const postId = post._id || post.id;
+
+  // Fetch comments when modal opens
+  useEffect(() => {
+    if (postId) {
+      fetchComments();
+    }
+  }, [postId]);
+
+  const fetchComments = async () => {
+    if (!postId) return;
+    
+    try {
+      setIsLoadingComments(true);
+      
+      // Fetch both comments and the accurate count from backend
+      const [commentsResponse, countResponse] = await Promise.all([
+        tweetService.getComments(postId),
+        tweetService.getCommentCount(postId)
+      ]);
+      
+      setComments(commentsResponse.data.comments || []);
+      const actualCommentCount = countResponse.data.count;
+      setCommentCount(actualCommentCount);
+      
+      // Update parent component with actual count from backend
+      if (onPostUpdate && actualCommentCount !== post.comments) {
+        onPostUpdate({
+          ...post,
+          comments: actualCommentCount
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch comments:', error);
+      setComments([]);
+    } finally {
+      setIsLoadingComments(false);
+    }
+  };
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -80,6 +140,15 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
       const response = await tweetService.toggleLike(postId);
       setIsLiked(response.data.liked);
       setLikeCount(response.data.likeCount);
+      
+      // Update parent component
+      if (onPostUpdate) {
+        onPostUpdate({
+          ...post,
+          likes: response.data.likeCount,
+          isLiked: response.data.liked
+        });
+      }
     } catch (error) {
       console.error('Failed to toggle like:', error);
     }
@@ -94,6 +163,14 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
     try {
       const response = await tweetService.toggleBookmark(postId);
       setIsBookmarked(response.data.bookmarked);
+      
+      // Update parent component
+      if (onPostUpdate) {
+        onPostUpdate({
+          ...post,
+          isBookmarked: response.data.bookmarked
+        });
+      }
     } catch (error) {
       console.error('Failed to toggle bookmark:', error);
     }
@@ -158,9 +235,41 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
       }
       
       try {
-        await tweetService.createComment(postId, newComment.trim());
+        const response = await tweetService.createComment(postId, newComment.trim());
         setNewComment('');
-        // Optionally refresh comments or show success message
+        
+        // Add the new comment to the list
+        if (response.data) {
+          setComments(prev => [response.data, ...prev]);
+          
+          // Fetch the updated comment count from backend to ensure sync
+          try {
+            const countResponse = await tweetService.getCommentCount(postId);
+            const actualCommentCount = countResponse.data.count;
+            setCommentCount(actualCommentCount);
+            
+            // Update parent component with actual comment count from backend
+            if (onPostUpdate) {
+              onPostUpdate({
+                ...post,
+                comments: actualCommentCount
+              });
+            }
+          } catch (countError) {
+            console.error('Failed to fetch updated comment count:', countError);
+            // Fallback to local increment if fetching count fails
+            const newCommentCount = commentCount + 1;
+            setCommentCount(newCommentCount);
+            
+            if (onPostUpdate) {
+              onPostUpdate({
+                ...post,
+                comments: newCommentCount
+              });
+            }
+          }
+        }
+        
         console.log('Comment posted successfully!');
       } catch (error: any) {
         console.error('Failed to post comment:', error);
@@ -346,13 +455,59 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
               </div>
             </div>
 
-            {/* Comments Section (Placeholder) */}
+            {/* Comments Section */}
             <div className="border-t border-gray-100 p-4">
-              <h3 className="font-semibold text-gray-900 mb-3">Comments</h3>
-              <div className="text-center text-gray-500 py-8">
-                <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p>Comments coming soon!</p>
-              </div>
+              <h3 className="font-semibold text-gray-900 mb-3">Comments ({commentCount})</h3>
+              
+              {isLoadingComments ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-500"></div>
+                </div>
+              ) : comments.length > 0 ? (
+                <div className="space-y-4 max-h-64 overflow-y-auto">
+                  {comments.map((comment) => (
+                    <div key={comment._id} className="flex space-x-3">
+                      <img
+                        src={comment.user.pfp}
+                        alt={comment.user.fullName}
+                        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="bg-gray-50 rounded-lg px-3 py-2">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <span className="font-medium text-sm text-gray-900">{comment.user.fullName}</span>
+                            <span className="text-xs text-gray-500">@{comment.user.username}</span>
+                            <span className="text-xs text-gray-500">•</span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(comment.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-700 leading-relaxed">{comment.content}</p>
+                        </div>
+                        
+                        {/* Comment actions */}
+                        <div className="flex items-center space-x-4 mt-1 text-xs">
+                          <button className="text-gray-500 hover:text-red-500 flex items-center space-x-1">
+                            <Heart className="w-3 h-3" />
+                            <span>{comment.likes || 0}</span>
+                          </button>
+                          <button className="text-gray-500 hover:text-blue-500">
+                            Reply
+                          </button>
+                          {comment.edited && (
+                            <span className="text-gray-400 italic">edited</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p>No comments yet. Be the first to comment!</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -369,7 +524,7 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
                 </button>
                 <button className="flex items-center space-x-1 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors duration-200">
                   <MessageCircle className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">{post.comments || 0}</span>
+                  <span className="text-sm font-medium text-gray-700">{commentCount}</span>
                 </button>
               </div>
               <div className="flex items-center space-x-2">
