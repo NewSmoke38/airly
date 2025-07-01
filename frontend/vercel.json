@@ -1,7 +1,7 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist",
-  "installCommand": "npm ci --prefer-offline --no-audit",
+  "installCommand": "npm install --force",
   "framework": "vite",
   "rewrites": [
     {
