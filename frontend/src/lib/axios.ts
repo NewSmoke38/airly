@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = 'http://localhost:8000/api/v1/';
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://vibely-3q1i.onrender.com';
 
 const axiosInstance = axios.create({
   baseURL,

@@ -13,8 +13,7 @@ const limit = parseInt(req.query.limit) || 10;
     .select("-password -refreshToken")
     .skip(skip)
     .limit(limit);
-    
-  const totalUsers = await User.countDocuments();    
+    const totalUsers = await User.countDocuments();    
   return res
     .status(200)
     .json(
