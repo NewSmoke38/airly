@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://vibely-3q1i.onrender.com';
-
-const axiosInstance = axios.create({
-  baseURL,
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true, // This is important for handling cookies
   headers: {
     'Content-Type': 'application/json',
@@ -11,7 +9,7 @@ const axiosInstance = axios.create({
 });
 
 // Add a request interceptor to include auth token
-axiosInstance.interceptors.request.use(
+api.interceptors.request.use(
   (config) => {
     // Get auth token from localStorage
     try {
@@ -33,7 +31,7 @@ axiosInstance.interceptors.request.use(
 );
 
 // Add a response interceptor to handle errors
-axiosInstance.interceptors.response.use(
+api.interceptors.response.use(
   (response) => response,
   (error) => {
     // Handle specific error cases
@@ -60,4 +58,4 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-export default axiosInstance; 
+export default api; 

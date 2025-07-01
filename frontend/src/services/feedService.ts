@@ -1,4 +1,4 @@
-import axiosInstance from '../lib/axios';
+import api from '../lib/axios';
 import { FeedResponse } from '../types';
 
 interface ApiResponse<T> {
@@ -12,7 +12,7 @@ export const feedService = {
     if (cursor) params.append('cursor', cursor);
     params.append('batch', batch.toString());
 
-    const response = await axiosInstance.get<ApiResponse<FeedResponse>>(`/feed?${params.toString()}`);
+    const response = await api.get<ApiResponse<FeedResponse>>(`/feed?${params.toString()}`);
     return response.data.data;
   },
 }; 
