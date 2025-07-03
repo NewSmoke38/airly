@@ -8,5 +8,14 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    rollupOptions: {
+      external: [],
+    },
+  },
+  optimizeDeps: {
+    exclude: ['@rollup/rollup-linux-x64-gnu'],
+  },
+  define: {
+    'process.env.ROLLUP_USE_NATIVE': 'false',
   },
 });
