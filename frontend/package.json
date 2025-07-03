@@ -6,10 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:vercel": "vite build --mode production",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "postinstall": "npm rebuild"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
