@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Hash, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { tweetService } from '../../services/tweetService';
 import { PostGrid } from '../posts/PostGrid';
 
@@ -11,6 +12,7 @@ interface SearchResult {
 }
 
 export const SearchPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult | null>(null);
   const [popularTags, setPopularTags] = useState<Array<{ tag: string; count: number }>>([]);
@@ -62,9 +64,14 @@ export const SearchPage: React.FC = () => {
     handleSearch(tag);
   };
 
+  const handlePostTagClick = (tag: string) => {
+    // Navigate to dashboard with tag filter
+    navigate(`/dashboard?tag=${encodeURIComponent(tag)}`);
+  };
+
   const handlePostClick = (post: any) => {
     // Navigate to post detail
-    window.location.href = `/dashboard/post/${post._id}`;
+    navigate(`/dashboard/post/${post._id}`);
   };
 
   const handleEditPost = (post: any) => {
@@ -155,6 +162,7 @@ export const SearchPage: React.FC = () => {
               onLoadMore={() => {}}
               hasMore={searchResults.hasMore}
               isLoading={false}
+              onTagClick={handlePostTagClick}
             />
           ) : (
             <div className="text-center py-16">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Search, Filter, TrendingUp, Clock, Star, AlertCircle, RefreshCw } from 'lucide-react';
 import { PostGrid } from '../posts/PostGrid';
 import { Post } from '../../types';
@@ -10,6 +10,9 @@ interface HomePageProps {
   onRetry?: () => void;
   onEditPost: (post: Post) => void;
   onPostClick: (post: Post) => void;
+  onTagClick?: (tag: string) => void;
+  selectedTag?: string | null;
+  onClearTag?: () => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ 
@@ -18,19 +21,21 @@ export const HomePage: React.FC<HomePageProps> = ({
   error, 
   onRetry, 
   onEditPost, 
-  onPostClick 
+  onPostClick,
+  onTagClick,
+  selectedTag,
+  onClearTag
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
 
   const categories = [
-    { id: 'all', label: 'All', count: posts?.length || 0 },
-    { id: 'photography', label: 'Photography', count: 8 },
-    { id: 'digital art', label: 'Digital Art', count: 5 },
-    { id: 'design', label: 'Design', count: 6 },
-    { id: 'nature', label: 'Nature', count: 7 },
-    { id: 'architecture', label: 'Architecture', count: 4 },
+    { id: 'all', label: 'All', tag: null },
+    { id: 'photography', label: 'Photography', tag: 'photography' },
+    { id: 'digital art', label: 'Digital Art', tag: 'art' },
+    { id: 'design', label: 'Design', tag: 'design' },
+    { id: 'nature', label: 'Nature', tag: 'nature' },
+    { id: 'architecture', label: 'Architecture', tag: 'architecture' },
   ];
 
   const sortOptions = [
@@ -45,22 +50,20 @@ export const HomePage: React.FC<HomePageProps> = ({
     
     const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          content.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory = selectedCategory === 'all' || 
-                           title.toLowerCase().includes(selectedCategory.toLowerCase());
 
-    return matchesSearch && matchesCategory;
+    return matchesSearch;
   }).sort((a, b) => {
     switch (sortBy) {
       case 'popular':
         return (b.likes || 0) - (a.likes || 0);
       case 'liked':
         return (b.likes || 0) - (a.likes || 0);
-      default:
+      default: {
         // For API posts, use createdAt
         const aDate = new Date(a.createdAt || 0).getTime();
         const bDate = new Date(b.createdAt || 0).getTime();
         return bDate - aDate;
+      }
     }
   });
 
@@ -136,15 +139,20 @@ export const HomePage: React.FC<HomePageProps> = ({
               {categories.map((category) => (
                 <button
                   key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
+                  onClick={() => {
+                    if (category.tag) {
+                      onTagClick?.(category.tag);
+                    } else {
+                      onClearTag?.();
+                    }
+                  }}
                   className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 ${
-                    selectedCategory === category.id
+                    (category.tag === selectedTag || (category.tag === null && !selectedTag))
                       ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
                   {category.label}
-                  <span className="ml-1 text-xs opacity-75">({category.count})</span>
                 </button>
               ))}
             </div>
@@ -177,12 +185,37 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
       </div>
 
+      {/* Selected Tag Filter */}
+      {selectedTag && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-blue-700 font-medium">Filtered by tag:</span>
+              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                #{selectedTag}
+              </span>
+            </div>
+            {onClearTag && (
+              <button
+                onClick={onClearTag}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
+              >
+                Clear filter
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Results Info */}
       <div className="flex items-center justify-between px-2 sm:px-0">
         <p className="text-sm sm:text-base text-gray-600">
           Showing <span className="font-semibold text-gray-900">{filteredPosts.length}</span> results
           {searchQuery && (
             <span className="hidden sm:inline"> for "<span className="font-semibold text-amber-600">{searchQuery}</span>"</span>
+          )}
+          {selectedTag && (
+            <span className="hidden sm:inline"> with tag "<span className="font-semibold text-blue-600">#{selectedTag}</span>"</span>
           )}
         </p>
       </div>
@@ -195,6 +228,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         onLoadMore={() => {}}
         hasMore={false}
         isLoading={isLoading}
+        onTagClick={onTagClick}
       />
     </div>
   );

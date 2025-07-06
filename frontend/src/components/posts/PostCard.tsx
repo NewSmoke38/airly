@@ -8,9 +8,10 @@ interface PostCardProps {
   post: Post;
   onEdit?: () => void;
   onClick?: () => void;
+  onTagClick?: (tag: string) => void;
 }
 
-export const PostCard: React.FC<PostCardProps> = ({ post, onEdit, onClick }) => {
+export const PostCard: React.FC<PostCardProps> = ({ post, onEdit, onClick, onTagClick }) => {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
@@ -243,12 +244,16 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onEdit, onClick }) => 
         {post.tags && post.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
             {post.tags.slice(0, 3).map((tag, index) => (
-              <span
+              <button
                 key={index}
-                className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-medium"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTagClick?.(tag);
+                }}
+                className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-medium hover:bg-blue-100 transition-colors cursor-pointer"
               >
                 #{tag}
-              </span>
+              </button>
             ))}
             {post.tags.length > 3 && (
               <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">

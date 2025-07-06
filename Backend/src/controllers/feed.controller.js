@@ -4,22 +4,29 @@ import { Tweet } from "../models/tweet.model.js";
 import mongoose from "mongoose";
 
 const getFeedPosts = asyncHandler(async (req, res) => {
-    const { cursor, batch = 20 } = req.query; 
+    const { cursor, batch = 20, tag } = req.query;
     const userId = req.user?._id; // Get current user ID if authenticated
 
     const limit = parseInt(batch) + 1;
 
-    let matchStage = {};   
+    let matchStage = {};
     if (cursor) {
-        matchStage = {         
+        matchStage = {
             _id: {
-                $lt: new mongoose.Types.ObjectId(cursor)  
-            }   
+                $lt: new mongoose.Types.ObjectId(cursor)
+            }
+        };
+    }
+
+    // Add tag filtering
+    if (tag) {
+        matchStage.tags = {
+            $in: [tag]
         };
     }
 
     try {
-        const posts = await Tweet.aggregate([      
+        const posts = await Tweet.aggregate([
             {
                 $lookup: {
                     from: "users",
@@ -28,7 +35,7 @@ const getFeedPosts = asyncHandler(async (req, res) => {
                     as: "user",
                     pipeline: [
                         {
-                            $project: {       
+                            $project: {
                                 username: 1,
                                 fullName: 1,
                                 pfp: 1
@@ -38,16 +45,16 @@ const getFeedPosts = asyncHandler(async (req, res) => {
                 }
             },
             {
-                $unwind: "$user"        
+                $unwind: "$user"
             },
             {
-                $match: matchStage       
+                $match: matchStage
             },
             {
-                $sort: { createdAt: -1 } 
+                $sort: { createdAt: -1 }
             },
             {
-                $limit: limit 
+                $limit: limit
             },
             {
                 $project: {
@@ -66,7 +73,7 @@ const getFeedPosts = asyncHandler(async (req, res) => {
                 }
             }
         ]);
-        
+
         if (userId) {
             posts.forEach(post => {
                 post.isLiked = post.likesArray.some(likeId => likeId.toString() === userId.toString());
@@ -82,16 +89,16 @@ const getFeedPosts = asyncHandler(async (req, res) => {
                 delete post.bookmarksArray;
             });
         }
-        
+
         const hasMore = posts.length > batch;
-        
+
         if (hasMore) {
             posts.pop();
         }
 
         const nextCursor = hasMore ? posts[posts.length - 1]._id : null;
 
-        const totalPosts = await Tweet.countDocuments();       
+        const totalPosts = await Tweet.countDocuments();
         return res.status(200).json(
             new ApiResponse(
                 200,
@@ -119,6 +126,6 @@ const getFeedPosts = asyncHandler(async (req, res) => {
     }
 });
 
-export { 
-    getFeedPosts 
+export {
+    getFeedPosts
 }; 

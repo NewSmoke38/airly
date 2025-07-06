@@ -27,22 +27,24 @@ const useIsMobile = () => {
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { postId } = useParams<{ postId: string }>();
+  const location = useLocation();
   const isMobile = useIsMobile();
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [currentPostIndex, setCurrentPostIndex] = useState<number>(-1);
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   console.log('🎯 DashboardPage render - postId:', postId, 'isMobile:', isMobile);
   console.log('🎯 Posts loaded:', posts.length);
 
   // Fetch posts for dashboard
-  const fetchPosts = async () => {
+  const fetchPosts = async (tag?: string) => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await feedService.getFeedPosts();
+      const response = await feedService.getFeedPosts(undefined, 20, tag || undefined);
       setPosts(response.posts || []);
       console.log('📊 DashboardPage fetched posts:', response.posts?.length || 0, 'posts');
       console.log('📊 Post IDs:', response.posts?.map(p => p._id || p.id) || []);
@@ -55,10 +57,18 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
+  // Handle URL search params for tag filtering
   useEffect(() => {
-    console.log('🔄 Fetching posts on mount...');
-    fetchPosts();
-  }, []);
+    const searchParams = new URLSearchParams(location.search);
+    const tagParam = searchParams.get('tag');
+    setSelectedTag(tagParam);
+  }, [location.search]);
+
+  // Fetch posts when tag changes
+  useEffect(() => {
+    console.log('🔄 Fetching posts for tag:', selectedTag);
+    fetchPosts(selectedTag || undefined);
+  }, [selectedTag]);
 
   // Handle post modal based on URL - only for desktop
   useEffect(() => {
@@ -167,7 +177,24 @@ export const DashboardPage: React.FC = () => {
   };
 
   const handleRetry = () => {
-    fetchPosts();
+    fetchPosts(selectedTag || undefined);
+  };
+
+  const handleTagClick = (tag: string) => {
+    console.log('🏷️ Tag clicked:', tag);
+    // Update URL with tag parameter
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set('tag', tag);
+    navigate(`/dashboard?${searchParams.toString()}`, { replace: true });
+  };
+
+  const handleClearTag = () => {
+    console.log('🏷️ Clearing tag filter');
+    // Remove tag parameter from URL
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.delete('tag');
+    const newSearch = searchParams.toString();
+    navigate(`/dashboard${newSearch ? `?${newSearch}` : ''}`, { replace: true });
   };
 
   return (
@@ -178,7 +205,10 @@ export const DashboardPage: React.FC = () => {
         error={error}
         onRetry={handleRetry}
         onPostClick={handlePostClick} 
-        onEditPost={handleEditPost} 
+        onEditPost={handleEditPost}
+        onTagClick={handleTagClick}
+        selectedTag={selectedTag}
+        onClearTag={handleClearTag}
       />
       
       {/* Only show modal on desktop */}

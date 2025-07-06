@@ -10,6 +10,7 @@ interface PostGridProps {
   hasMore: boolean;
   isLoading: boolean;
   className?: string;
+  onTagClick?: (tag: string) => void;
 }
 
 export const PostGrid: React.FC<PostGridProps> = ({
@@ -19,7 +20,8 @@ export const PostGrid: React.FC<PostGridProps> = ({
   onLoadMore,
   hasMore,
   isLoading,
-  className = "masonry-grid"
+  className = "masonry-grid",
+  onTagClick
 }) => {
   const observer = useRef<IntersectionObserver>();
   
@@ -48,6 +50,7 @@ export const PostGrid: React.FC<PostGridProps> = ({
             post={post}
             onEdit={onEditPost ? () => onEditPost(post) : undefined}
             onClick={() => onPostClick(post)}
+            onTagClick={onTagClick}
           />
         </div>
       ))}

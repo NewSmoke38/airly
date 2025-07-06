@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+const baseURL = 'http://localhost:8000/api/v1/';
+
+const axiosInstance = axios.create({
+  baseURL,
   withCredentials: true, // This is important for handling cookies
   headers: {
     'Content-Type': 'application/json',
@@ -9,7 +11,7 @@ const api = axios.create({
 });
 
 // Add a request interceptor to include auth token
-api.interceptors.request.use(
+axiosInstance.interceptors.request.use(
   (config) => {
     // Get auth token from localStorage
     try {
@@ -31,7 +33,7 @@ api.interceptors.request.use(
 );
 
 // Add a response interceptor to handle errors
-api.interceptors.response.use(
+axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     // Handle specific error cases
@@ -58,4 +60,4 @@ api.interceptors.response.use(
   }
 );
 
-export default api; 
+export default axiosInstance; 

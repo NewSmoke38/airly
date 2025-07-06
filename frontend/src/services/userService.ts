@@ -1,4 +1,4 @@
-import api from '../lib/axios';
+import axiosInstance from '../lib/axios';
 import { User } from '../types';
 
 interface LoginData {
@@ -60,7 +60,7 @@ export const userService = {
     formData.append('password', data.password);
     formData.append('pfp', data.pfp);
 
-    const response = await api.post<ApiResponse<AuthResponse>>('users/register', formData, {
+    const response = await axiosInstance.post<ApiResponse<AuthResponse>>('users/register', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -69,18 +69,18 @@ export const userService = {
   },
 
   async login(data: LoginData): Promise<AuthResponse> {
-    const response = await api.post<ApiResponse<AuthResponse>>('users/login', data);
+    const response = await axiosInstance.post<ApiResponse<AuthResponse>>('users/login', data);
     return response.data.data;
   },
 
   // Profile functions
   async getUserProfile(username: string): Promise<UserProfile> {
-    const response = await api.get<ApiResponse<UserProfile>>(`profile/u/${username}`);
+    const response = await axiosInstance.get<ApiResponse<UserProfile>>(`profile/u/${username}`);
     return response.data.data;
   },
 
   async getOwnProfile(): Promise<UserProfile> {
-    const response = await api.get<ApiResponse<UserProfile>>('profile/me');
+    const response = await axiosInstance.get<ApiResponse<UserProfile>>('profile/me');
     return response.data.data;
   },
 
@@ -89,23 +89,23 @@ export const userService = {
     if (cursor) params.append('cursor', cursor);
     params.append('batch', batch.toString());
 
-    const response = await api.get(`profile/u/${username}/posts?${params.toString()}`);
+    const response = await axiosInstance.get(`profile/u/${username}/posts?${params.toString()}`);
     return response.data.data;
   },
 
   // Social functions
   async toggleFollow(userId: string): Promise<RelationshipResponse> {
-    const response = await api.post<ApiResponse<RelationshipResponse>>(`users/${userId}/follow`);
+    const response = await axiosInstance.post<ApiResponse<RelationshipResponse>>(`users/${userId}/follow`);
     return response.data.data;
   },
 
   async toggleBlock(userId: string): Promise<RelationshipResponse> {
-    const response = await api.post<ApiResponse<RelationshipResponse>>(`users/${userId}/block`);
+    const response = await axiosInstance.post<ApiResponse<RelationshipResponse>>(`users/${userId}/block`);
     return response.data.data;
   },
 
   async getUserRelationship(userId: string) {
-    const response = await api.get(`users/${userId}/relationship`);
+    const response = await axiosInstance.get(`users/${userId}/relationship`);
     return response.data.data;
   },
 }; 

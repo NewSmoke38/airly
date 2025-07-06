@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, MapPin, Calendar, Users, Award, Eye, Heart, MoreHorizontal, UserMinus, UserX, Flag } from 'lucide-react';
+import { Edit, MapPin, Calendar, Award, Heart, MoreHorizontal, UserX, Flag } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { RootState } from '../../store';
@@ -56,7 +56,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
 
   // Close menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = () => {
       if (showMenu) {
         setShowMenu(false);
       }
@@ -146,6 +146,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
     // TODO: Implement report functionality
     console.log('Report user:', profile?.username);
     setShowMenu(false);
+  };
+
+  const handleTagClick = (tag: string) => {
+    // Navigate to dashboard with tag filter
+    navigate(`/dashboard?tag=${encodeURIComponent(tag)}`);
   };
 
   if (isLoading) {
@@ -344,6 +349,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
                hasMore={false}
                isLoading={false}
                className="masonry-grid-profile"
+               onTagClick={handleTagClick}
              />
            )}
                      {activeTab === 'liked' && profile.relationshipStatus.isOwnProfile && (
@@ -355,6 +361,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
                hasMore={false}
                isLoading={false}
                className="masonry-grid-profile"
+               onTagClick={handleTagClick}
              />
            )}
         </div>
