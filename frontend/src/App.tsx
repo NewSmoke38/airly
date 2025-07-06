@@ -1,26 +1,26 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from './store';
 import { initializeAuth } from './features/auth/authSlice';
 
-// Auth Components
 import { Login } from './components/auth/Login';
 import { Signup } from './components/auth/Signup';
 
-// Layout Components
 import { Layout } from './components/layout/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { AdminProtectedRoute } from './components/AdminProtectedRoute';
 
-// Page Components
 import { DashboardPage } from './components/pages/DashboardPage';
 import { ProfilePage } from './components/pages/ProfilePage';
 import { PostDetailPageWrapper } from './components/pages/PostDetailPageWrapper';
 import { UploadPage } from './components/pages/UploadPage';
 import { SearchPage } from './components/pages/SearchPage';
 import { PlaceholderPage } from './components/pages/PlaceholderPage';
+import { AdminDashboard } from './components/pages/AdminDashboard';
+import { FavoritesPageWrapper } from './components/pages/FavoritesPageWrapper';
+import { CollectionsPageWrapper } from './components/pages/CollectionsPageWrapper';
 
-// Icons
 import { TrendingUp, Heart, Bookmark, Users, Settings } from 'lucide-react';
 
 function App() {
@@ -28,7 +28,6 @@ function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // Initialize auth from localStorage
     dispatch(initializeAuth());
   }, [dispatch]);
 
@@ -77,28 +76,10 @@ function App() {
               />
             } 
           />
-          <Route 
-            path="favorites" 
-            element={
-              <PlaceholderPage 
-                title="Favorites"
-                description="Your liked posts and content"
-                icon={Heart}
-                gradientColors="bg-gradient-to-r from-pink-400 to-red-500"
-              />
-            } 
-          />
-          <Route 
-            path="saved" 
-            element={
-              <PlaceholderPage 
-                title="Collections"
-                description="Your saved posts and bookmarks"
-                icon={Bookmark}
-                gradientColors="bg-gradient-to-r from-blue-400 to-purple-500"
-              />
-            } 
-          />
+          <Route path="favorites" element={<FavoritesPageWrapper />} />
+          <Route path="favorites/post/:postId" element={<FavoritesPageWrapper />} />
+          <Route path="saved" element={<CollectionsPageWrapper />} />
+          <Route path="saved/post/:postId" element={<CollectionsPageWrapper />} />
           <Route 
             path="following" 
             element={
@@ -121,6 +102,7 @@ function App() {
               />
             } 
           />
+          <Route path="admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
           <Route path="post/:id" element={<PostDetailPageWrapper />} />
         </Route>
 

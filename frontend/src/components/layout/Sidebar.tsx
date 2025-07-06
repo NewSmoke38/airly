@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, User, Settings, Upload, Search, Heart, Bookmark, LogOut, TrendingUp, Users } from 'lucide-react';
+import { Home, User, Upload, Heart, Bookmark, LogOut, Users, Shield } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '../../store';
@@ -24,26 +24,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    console.log('Logout button clicked - clearing local state');
     dispatch(logout());
-    console.log('Logout action dispatched - user logged out');
-    onCloseMobileMenu(); // Close mobile menu after logout
+    onCloseMobileMenu(); 
   };
 
-  const menuItems = [
+  const baseMenuItems = [
     { id: 'home', icon: Home, label: 'Home', path: '/dashboard' },
-    { id: 'search', icon: Search, label: 'Explore', path: '/search' },
-    { id: 'trending', icon: TrendingUp, label: 'Trending', path: '/trending' },
     { id: 'favorites', icon: Heart, label: 'Favorites', path: '/favorites' },
     { id: 'saved', icon: Bookmark, label: 'Collections', path: '/saved' },
     { id: 'following', icon: Users, label: 'Following', path: '/following' },
     { id: 'profile', icon: User, label: 'Profile', path: '/profile' },
-    { id: 'settings', icon: Settings, label: 'Settings', path: '/settings' },
   ];
+
+  const adminMenuItem = { id: 'admin', icon: Shield, label: 'Admin', path: '/admin' };
+
+  const menuItems = user?.role === 'admin' 
+    ? [...baseMenuItems, adminMenuItem]
+    : baseMenuItems;
 
   const handleNavigation = (path: string) => {
     navigate(path);
-    onCloseMobileMenu(); // Close mobile menu after navigation
+    onCloseMobileMenu(); 
   };
 
   return (

@@ -24,7 +24,7 @@ export const Layout: React.FC = () => {
 
   const handleUploadClick = () => {
     navigate('/upload');
-    setIsMobileMenuOpen(false); // Close mobile menu after navigation
+    setIsMobileMenuOpen(false); 
   };
 
   const handleMenuToggle = () => {

@@ -24,19 +24,16 @@ export const UploadPage: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Validation constants based on backend rules
   const MAX_CONTENT_LENGTH = 280;
   const MAX_MEDIA_SIZE = 10 * 1024 * 1024; // 10MB in bytes
   const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
-  // Popular tag suggestions
   const popularTags = [
     'photography', 'art', 'nature', 'travel', 'food', 'lifestyle', 'fashion', 
     'technology', 'design', 'architecture', 'music', 'fitness', 'beauty', 
     'inspiration', 'creativity', 'minimalism', 'vintage', 'modern', 'abstract'
   ];
 
-  // Filter tag suggestions based on input
   const getTagSuggestions = () => {
     if (!tagInput.trim()) return popularTags.slice(0, 6);
     return popularTags.filter(tag => 
@@ -44,14 +41,12 @@ export const UploadPage: React.FC = () => {
       !tags.includes(tag)
     ).slice(0, 6);
   };
-
-  // Validation functions
   const validateTitle = (value: string): string | undefined => {
     const trimmedValue = value.trim();
     if (trimmedValue.length === 0) {
       return 'Title is required';
     }
-    if (trimmedValue.length > 100) { // Reasonable title limit
+    if (trimmedValue.length > 100) { 
       return 'Title must be 100 characters or less';
     }
     return undefined;
@@ -91,7 +86,6 @@ export const UploadPage: React.FC = () => {
     return undefined;
   };
 
-  // Real-time validation handlers
   const handleTitleChange = (value: string) => {
     setTitle(value);
     const error = validateTitle(value);
@@ -110,7 +104,6 @@ export const UploadPage: React.FC = () => {
     setValidationErrors(prev => ({ ...prev, tags: error }));
   };
 
-  // Tag handling functions
   const addTag = (tag: string) => {
     const trimmedTag = tag.trim().toLowerCase();
     if (trimmedTag && !tags.includes(trimmedTag) && tags.length < 10) {
@@ -144,7 +137,6 @@ export const UploadPage: React.FC = () => {
     
     if (file && !mediaError) {
       setMedia(file);
-      // Create preview URL
       const reader = new FileReader();
       reader.onload = (e) => {
         setPreviewUrl(e.target?.result as string);
@@ -160,7 +152,6 @@ export const UploadPage: React.FC = () => {
     e.preventDefault();
     setError(null);
 
-    // Validate all fields
     const titleError = validateTitle(title);
     const contentError = validateContent(content);
     const mediaError = validateMedia(media);
@@ -174,7 +165,6 @@ export const UploadPage: React.FC = () => {
 
     setValidationErrors(errors);
 
-    // If there are validation errors, don't submit
     if (Object.keys(errors).length > 0) {
       return;
     }

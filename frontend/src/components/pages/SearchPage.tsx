@@ -19,7 +19,6 @@ export const SearchPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load popular tags on component mount
   useEffect(() => {
     loadPopularTags();
   }, []);
@@ -43,7 +42,6 @@ export const SearchPage: React.FC = () => {
     setError(null);
 
     try {
-      // Use the existing tag-based search
       const response = await tweetService.searchTweetsByTags(query);
       setSearchResults(response.data);
     } catch (error: any) {
@@ -65,17 +63,14 @@ export const SearchPage: React.FC = () => {
   };
 
   const handlePostTagClick = (tag: string) => {
-    // Navigate to dashboard with tag filter
     navigate(`/dashboard?tag=${encodeURIComponent(tag)}`);
   };
 
   const handlePostClick = (post: any) => {
-    // Navigate to post detail
     navigate(`/dashboard/post/${post._id}`);
   };
 
   const handleEditPost = (post: any) => {
-    // Handle edit post
     console.log('Edit post:', post);
   };
 

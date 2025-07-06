@@ -30,16 +30,14 @@ export const Signup: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Validation constants based on backend rules
   const MAX_FULLNAME_LENGTH = 30;
   const MAX_USERNAME_LENGTH = 30;
   const MIN_PASSWORD_LENGTH = 6;
   const MAX_PASSWORD_LENGTH = 8;
-  const MAX_PFP_SIZE = 3 * 1024 * 1024; // 3MB in bytes
+  const MAX_PFP_SIZE = 3 * 1024 * 1024;  
   const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
   const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 
-  // Validation functions
   const validateFullName = (value: string): string | undefined => {
     const trimmedValue = value.trim();
     if (trimmedValue.length === 0) {
@@ -115,7 +113,6 @@ export const Signup: React.FC = () => {
     return undefined;
   };
 
-  // Real-time validation handlers
   const handleNameChange = (value: string) => {
     setName(value);
     const error = validateFullName(value);
@@ -123,7 +120,6 @@ export const Signup: React.FC = () => {
   };
 
   const handleUsernameChange = (value: string) => {
-    // Convert to lowercase for username
     const lowercaseValue = value.toLowerCase();
     setUsername(lowercaseValue);
     const error = validateUsername(lowercaseValue);
@@ -141,7 +137,6 @@ export const Signup: React.FC = () => {
     const error = validatePassword(value);
     setValidationErrors(prev => ({ ...prev, password: error }));
     
-    // Also re-validate confirm password if it exists
     if (confirmPassword) {
       const confirmError = validateConfirmPassword(confirmPassword, value);
       setValidationErrors(prev => ({ ...prev, confirmPassword: confirmError }));
@@ -176,7 +171,6 @@ export const Signup: React.FC = () => {
     e.preventDefault();
     setError(null);
     
-    // Validate all fields
     const fullNameError = validateFullName(name);
     const usernameError = validateUsername(username);
     const emailError = validateEmail(email);
@@ -194,7 +188,6 @@ export const Signup: React.FC = () => {
 
     setValidationErrors(errors);
 
-    // If there are validation errors, don't submit
     if (Object.keys(errors).length > 0) {
       return;
     }
@@ -210,7 +203,6 @@ export const Signup: React.FC = () => {
         pfp: pfp!,
       });
 
-      // Dispatch login success action with the response data
       dispatch(loginSuccess({
         user: response.user,
         accessToken: response.accessToken,

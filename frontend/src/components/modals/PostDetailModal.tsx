@@ -55,7 +55,6 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
   const userHandle = post.user?.username || post.author?.name?.toLowerCase().replace(/\s+/g, '') || 'user';
   const postId = post._id || post.id;
 
-  // Fetch comments when modal opens
   useEffect(() => {
     if (postId) {
       fetchComments();
@@ -68,7 +67,6 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
     try {
       setIsLoadingComments(true);
       
-      // Fetch both comments and the accurate count from backend
       const [commentsResponse, countResponse] = await Promise.all([
         tweetService.getComments(postId),
         tweetService.getCommentCount(postId)
@@ -78,7 +76,6 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
       const actualCommentCount = countResponse.data.count;
       setCommentCount(actualCommentCount);
       
-      // Update parent component with actual count from backend
       if (onPostUpdate && actualCommentCount !== post.comments) {
         onPostUpdate({
           ...post,
@@ -93,7 +90,6 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
     }
   };
 
-  // Handle ESC key to close modal
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -109,7 +105,6 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [onClose, onPrevious, onNext, hasPrevious, hasNext]);
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -141,7 +136,6 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
       setIsLiked(response.data.liked);
       setLikeCount(response.data.likeCount);
       
-      // Update parent component
       if (onPostUpdate) {
         onPostUpdate({
           ...post,
@@ -164,7 +158,6 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
       const response = await tweetService.toggleBookmark(postId);
       setIsBookmarked(response.data.bookmarked);
       
-      // Update parent component
       if (onPostUpdate) {
         onPostUpdate({
           ...post,
@@ -180,8 +173,6 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
     try {
       const url = `${window.location.origin}/dashboard/post/${post._id || post.id}`;
       await navigator.clipboard.writeText(url);
-      // TODO: Show toast notification
-      console.log('Link copied to clipboard');
       setShowMenu(false);
     } catch (error) {
       console.error('Error copying link:', error);
@@ -198,9 +189,7 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
           url: url,
         });
       } else {
-        // Fallback to copy link
         await navigator.clipboard.writeText(url);
-        console.log('Link copied to clipboard');
       }
     } catch (error) {
       console.error('Error sharing:', error);
@@ -208,20 +197,14 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
   };
 
   const handleUnfollow = () => {
-    // TODO: API call to unfollow user
-    console.log('Unfollow user:', userHandle);
     setShowProfileMenu(false);
   };
 
   const handleBlock = () => {
-    // TODO: API call to block user
-    console.log('Block user:', userHandle);
     setShowProfileMenu(false);
   };
 
   const handleReport = () => {
-    // TODO: Open report modal
-    console.log('Report post:', post._id || post.id);
     setShowMenu(false);
   };
 
@@ -238,17 +221,13 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
         const response = await tweetService.createComment(postId, newComment.trim());
         setNewComment('');
         
-        // Add the new comment to the list
         if (response.data) {
           setComments(prev => [response.data, ...prev]);
-          
-          // Fetch the updated comment count from backend to ensure sync
           try {
             const countResponse = await tweetService.getCommentCount(postId);
             const actualCommentCount = countResponse.data.count;
             setCommentCount(actualCommentCount);
             
-            // Update parent component with actual comment count from backend
             if (onPostUpdate) {
               onPostUpdate({
                 ...post,
@@ -257,7 +236,6 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
             }
           } catch (countError) {
             console.error('Failed to fetch updated comment count:', countError);
-            // Fallback to local increment if fetching count fails
             const newCommentCount = commentCount + 1;
             setCommentCount(newCommentCount);
             
@@ -270,10 +248,8 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
           }
         }
         
-        console.log('Comment posted successfully!');
       } catch (error: any) {
         console.error('Failed to post comment:', error);
-        // Optionally show error message to user
       }
     }
   };

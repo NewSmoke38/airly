@@ -45,7 +45,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
   const [isFollowing, setIsFollowing] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
 
-  // Determine which profile to load
   const profileUsername = username || currentUser?.username;
 
   useEffect(() => {
@@ -54,7 +53,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
     }
   }, [profileUsername]);
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = () => {
       if (showMenu) {
@@ -71,17 +69,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
       setIsLoading(true);
       setError(null);
 
-      // Fetch user profile
       const profileData = await userService.getUserProfile(profileUsername!);
       setProfile(profileData);
       setIsFollowing(profileData.relationshipStatus.isFollowing);
       setIsBlocked(profileData.relationshipStatus.isBlocked);
 
-      // Fetch user posts
       const postsData = await userService.getUserPosts(profileUsername!);
       setUserPosts(postsData.posts || []);
 
-      // Fetch liked posts if it's the current user's profile
       if (profileData.relationshipStatus.isOwnProfile) {
         try {
           const likedData = await tweetService.getUserLikedTweets();
@@ -107,7 +102,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
       const response = await userService.toggleFollow(profile._id);
       setIsFollowing(response.isFollowing);
       
-      // Update follower count
       setProfile(prev => prev ? {
         ...prev,
         followerCount: response.isFollowing 
@@ -127,7 +121,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
       const response = await userService.toggleBlock(profile._id);
       setIsBlocked(response.isBlocked || false);
       
-      // If blocked, also unfollow
       if (response.isBlocked) {
         setIsFollowing(false);
         setProfile(prev => prev ? {
@@ -143,13 +136,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onEditPost, onPostClic
   };
 
   const handleReport = () => {
-    // TODO: Implement report functionality
-    console.log('Report user:', profile?.username);
     setShowMenu(false);
   };
 
   const handleTagClick = (tag: string) => {
-    // Navigate to dashboard with tag filter
     navigate(`/dashboard?tag=${encodeURIComponent(tag)}`);
   };
 

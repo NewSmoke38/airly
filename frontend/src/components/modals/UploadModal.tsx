@@ -1,8 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { X, Upload, Image, Camera, Video, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, Upload, Image, Camera,AlertCircle, CheckCircle } from 'lucide-react';
 import { tweetService, CreateTweetData } from '../../services/tweetService';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -30,21 +28,17 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user } = useSelector((state: RootState) => state.auth);
 
-  // Validation constants based on backend rules
   const MAX_CONTENT_LENGTH = 280;
   const MAX_MEDIA_SIZE = 10 * 1024 * 1024; // 10MB in bytes
   const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
-  // Popular tag suggestions
   const popularTags = [
     'photography', 'art', 'nature', 'travel', 'food', 'lifestyle', 'fashion', 
     'technology', 'design', 'architecture', 'music', 'fitness', 'beauty', 
     'inspiration', 'creativity', 'minimalism', 'vintage', 'modern', 'abstract'
   ];
 
-  // Filter tag suggestions based on input
   const getTagSuggestions = () => {
     if (!tagInput.trim()) return popularTags.slice(0, 6);
     return popularTags.filter(tag => 
@@ -54,8 +48,6 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
   };
 
   if (!isOpen) return null;
-
-  // Validation functions
   const validateTitle = (value: string): string | undefined => {
     const trimmedValue = value.trim();
     if (trimmedValue.length === 0) {
@@ -101,7 +93,6 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
     return undefined;
   };
 
-  // Real-time validation
   const handleTitleChange = (value: string) => {
     setTitle(value);
     const error = validateTitle(value);
@@ -120,7 +111,6 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
     setValidationErrors(prev => ({ ...prev, tags: error }));
   };
 
-  // Tag handling functions
   const addTag = (tag: string) => {
     const trimmedTag = tag.trim().toLowerCase();
     if (trimmedTag && !tags.includes(trimmedTag) && tags.length < 10) {
@@ -194,7 +184,6 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
     e.preventDefault();
     setError(null);
 
-    // Validate all fields
     const titleError = validateTitle(title);
     const contentError = validateContent(content);
     const mediaError = validateMedia(selectedFile);
@@ -208,7 +197,6 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
 
     setValidationErrors(errors);
 
-    // If there are validation errors, don't submit
     if (Object.keys(errors).length > 0) {
       return;
     }
@@ -220,7 +208,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
         title: title.trim(),
         content: content.trim(),
         media: selectedFile!,
-        tags: tags // Add tags to the submission
+        tags: tags 
       };
       const response = await tweetService.createTweet(tweetData);
       onUpload({
@@ -230,7 +218,6 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
         type: 'tweet'
       });
       
-      // Reset form
       setTitle('');
       setContent('');
       setTags([]);

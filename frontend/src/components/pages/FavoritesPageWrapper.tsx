@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { HomePage } from './HomePage';
+import { FavoritesPage } from './FavoritesPage';
 import { PostDetailModal } from '../modals/PostDetailModal';
 import { Post } from '../../types';
-import { feedService } from '../../services/feedService';
+import { likeService } from '../../services/likeService';
 
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -22,7 +22,7 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-export const DashboardPage: React.FC = () => {
+export const FavoritesPageWrapper: React.FC = () => {
   const navigate = useNavigate();
   const { postId } = useParams<{ postId: string }>();
   const location = useLocation();
@@ -30,39 +30,23 @@ export const DashboardPage: React.FC = () => {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [currentPostIndex, setCurrentPostIndex] = useState<number>(-1);
   const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
-
-  const fetchPosts = async (tag?: string) => {
+  const fetchLikedPosts = async () => {
     try {
-      setIsLoading(true);
-      setError(null);
-      const response = await feedService.getFeedPosts(undefined, 20, tag || undefined);
-      setPosts(response.posts || []);
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to load posts. Please try again.');
+      const response = await likeService.getUserLikedPosts(undefined, 50); // Get more for navigation
+      setPosts(response.tweets || []);
+    } catch (error) {
+      console.error('Failed to fetch liked posts for navigation:', error);
       setPosts([]);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const tagParam = searchParams.get('tag');
-    setSelectedTag(tagParam);
-  }, [location.search]);
+    fetchLikedPosts();
+  }, []);
 
   useEffect(() => {
-    fetchPosts(selectedTag || undefined);
-  }, [selectedTag]);
-
-  useEffect(() => {
-    
     if (!isMobile) {
-      
       if (postId && posts.length > 0) {
         const post = posts.find(p => (p._id || p.id) === postId);
         
@@ -70,7 +54,7 @@ export const DashboardPage: React.FC = () => {
           setSelectedPost(post);
           setCurrentPostIndex(posts.indexOf(post));
         } else {
-          navigate('/dashboard', { replace: true });
+          navigate('/favorites', { replace: true });
         }
       } else if (!postId) {
         setSelectedPost(null);
@@ -90,20 +74,20 @@ export const DashboardPage: React.FC = () => {
       if (isMobile) {
         navigate(`/post/${postId}`, { state: { post } });
       } else {
-        navigate(`/dashboard/post/${postId}`, { replace: false });
+        navigate(`/favorites/post/${postId}`, { replace: false });
       }
-    } 
+    }
   };
 
   const handleCloseModal = () => {
-    navigate('/dashboard', { replace: false });
+    navigate('/favorites', { replace: false });
   };
 
   const handlePreviousPost = () => {
     if (currentPostIndex > 0) {
       const previousPost = posts[currentPostIndex - 1];
       const postId = previousPost._id || previousPost.id;
-      navigate(`/dashboard/post/${postId}`, { replace: true });
+      navigate(`/favorites/post/${postId}`, { replace: true });
     }
   };
 
@@ -111,7 +95,7 @@ export const DashboardPage: React.FC = () => {
     if (currentPostIndex < posts.length - 1) {
       const nextPost = posts[currentPostIndex + 1];
       const postId = nextPost._id || nextPost.id;
-      navigate(`/dashboard/post/${postId}`, { replace: true });
+      navigate(`/favorites/post/${postId}`, { replace: true });
     }
   };
 
@@ -133,35 +117,16 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-  const handleRetry = () => {
-    fetchPosts(selectedTag || undefined);
-  };
-
   const handleTagClick = (tag: string) => {
-    const searchParams = new URLSearchParams(location.search);
-    searchParams.set('tag', tag);
-    navigate(`/dashboard?${searchParams.toString()}`, { replace: true });
-  };
-
-  const handleClearTag = () => {
-    const searchParams = new URLSearchParams(location.search);
-    searchParams.delete('tag');
-    const newSearch = searchParams.toString();
-    navigate(`/dashboard${newSearch ? `?${newSearch}` : ''}`, { replace: true });
+    navigate(`/dashboard?tag=${tag}`, { replace: false });
   };
 
   return (
     <>
-      <HomePage 
-        posts={posts}
-        isLoading={isLoading}
-        error={error}
-        onRetry={handleRetry}
+      <FavoritesPage 
         onPostClick={handlePostClick} 
         onEditPost={handleEditPost}
         onTagClick={handleTagClick}
-        selectedTag={selectedTag}
-        onClearTag={handleClearTag}
       />
       
       {/* Only show modal on desktop */}

@@ -73,7 +73,6 @@ export const userService = {
     return response.data.data;
   },
 
-  // Profile functions
   async getUserProfile(username: string): Promise<UserProfile> {
     const response = await axiosInstance.get<ApiResponse<UserProfile>>(`profile/u/${username}`);
     return response.data.data;
@@ -93,7 +92,6 @@ export const userService = {
     return response.data.data;
   },
 
-  // Social functions
   async toggleFollow(userId: string): Promise<RelationshipResponse> {
     const response = await axiosInstance.post<ApiResponse<RelationshipResponse>>(`users/${userId}/follow`);
     return response.data.data;

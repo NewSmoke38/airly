@@ -68,7 +68,6 @@ class TweetService {
     return response.data;
   }
 
-  // Like functionality
   async toggleLike(tweetId: string): Promise<ApiResponse<{ liked: boolean; likeCount: number }>> {
     const response = await axios.post(`/likes/tweets/${tweetId}/like`);
     return response.data;
@@ -102,7 +101,6 @@ class TweetService {
     return response.data;
   }
 
-  // Bookmark functionality
   async toggleBookmark(tweetId: string): Promise<ApiResponse<{ bookmarked: boolean; bookmarkCount: number }>> {
     const response = await axios.post(`/bookmarks/tweets/${tweetId}/bookmark`);
     return response.data;
@@ -136,7 +134,6 @@ class TweetService {
     return response.data;
   }
 
-  // Views functionality
   async incrementView(tweetId: string): Promise<ApiResponse<{ views: number }>> {
     const response = await axios.post(`/views/tweets/${tweetId}/view`);
     return response.data;
@@ -165,7 +162,6 @@ class TweetService {
     return response.data;
   }
 
-  // Comments functionality
   async getComments(tweetId: string, cursor?: string, batch = 20): Promise<ApiResponse<{ comments: any[]; hasMore: boolean; nextCursor?: string }>> {
     const params = new URLSearchParams();
     if (cursor) params.append('cursor', cursor);
@@ -200,7 +196,6 @@ class TweetService {
     return response.data;
   }
 
-  // Search functionality
   async searchContent(query: string, type: 'all' | 'tweets' | 'users' = 'all', cursor?: string, batch = 20): Promise<ApiResponse<{
     tweets: Tweet[];
     users: any[];
@@ -243,7 +238,6 @@ class TweetService {
     return response.data;
   }
 
-  // Share functionality
   async getShareableLink(tweetId: string): Promise<string> {
     return `${window.location.origin}/dashboard/post/${tweetId}`;
   }

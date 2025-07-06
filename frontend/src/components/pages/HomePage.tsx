@@ -59,7 +59,6 @@ export const HomePage: React.FC<HomePageProps> = ({
       case 'liked':
         return (b.likes || 0) - (a.likes || 0);
       default: {
-        // For API posts, use createdAt
         const aDate = new Date(a.createdAt || 0).getTime();
         const bDate = new Date(b.createdAt || 0).getTime();
         return bDate - aDate;
@@ -67,7 +66,6 @@ export const HomePage: React.FC<HomePageProps> = ({
     }
   });
 
-  // Error State
   if (error && !isLoading) {
     return (
       <div className="space-y-4 sm:space-y-6">
@@ -89,7 +87,6 @@ export const HomePage: React.FC<HomePageProps> = ({
     );
   }
 
-  // Empty State (no posts but no error)
   if (!isLoading && !error && posts.length === 0) {
     return (
       <div className="space-y-4 sm:space-y-6">

@@ -15,27 +15,23 @@ export const PostDetailPage: React.FC<PostDetailPageProps> = ({ post, onEditPost
   const [relatedPosts, setRelatedPosts] = useState<Post[]>([]);
   const [isLoadingRelated, setIsLoadingRelated] = useState(false);
 
-  // Fetch related posts when component mounts
   useEffect(() => {
     const fetchRelatedPosts = async () => {
       try {
         setIsLoadingRelated(true);
         const response = await feedService.getFeedPosts();
         
-                 // Filter out current post and get posts with similar tags or same user
-         const allPosts = response.posts || [];
-         const filtered = allPosts
-           .filter(p => (p._id || p.id) !== (post._id || post.id))
-           .filter(p => {
-             // Include posts from same user or with similar tags
-             const isSameUser = p.user?.username === post.user?.username;
-             const hasSimilarTags = post.tags && p.tags && 
-               post.tags.some(tag => p.tags!.includes(tag));
-             return isSameUser || hasSimilarTags;
-           })
-           .slice(0, 4);
+                         const allPosts = response.posts || [];
+        const filtered = allPosts
+          .filter(p => (p._id || p.id) !== (post._id || post.id))
+          .filter(p => {
+            const isSameUser = p.user?.username === post.user?.username;
+            const hasSimilarTags = post.tags && p.tags && 
+              post.tags.some(tag => p.tags!.includes(tag));
+            return isSameUser || hasSimilarTags;
+          })
+          .slice(0, 4);
         
-        // If not enough related posts, fill with random posts
         if (filtered.length < 4) {
           const remainingCount = 4 - filtered.length;
           const randomPosts = allPosts
@@ -60,7 +56,6 @@ export const PostDetailPage: React.FC<PostDetailPageProps> = ({ post, onEditPost
   const handleRelatedPostClick = (relatedPost: Post) => {
     const postId = relatedPost._id || relatedPost.id;
     if (postId) {
-      // Check if mobile
       const isMobile = window.innerWidth < 1024;
       if (isMobile) {
         navigate(`/post/${postId}`, { state: { post: relatedPost } });
@@ -79,7 +74,6 @@ export const PostDetailPage: React.FC<PostDetailPageProps> = ({ post, onEditPost
     try {
       const response = await tweetService.toggleLike(postId);
       
-      // Update the related post's like status in state
       setRelatedPosts(prev => prev.map(p => 
         (p._id || p.id) === postId 
           ? { ...p, isLiked: response.data.liked, likes: response.data.likeCount }

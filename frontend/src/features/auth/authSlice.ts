@@ -42,7 +42,6 @@ const saveToLocalStorage = (state: AuthState) => {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
   } catch (error) {
-    // Handle localStorage errors silently
     console.error('Failed to save auth state to localStorage:', error);
   }
 };
@@ -58,8 +57,6 @@ const authSlice = createSlice({
       saveToLocalStorage(state);
     },
     logout() {
-      // State will be reset by the root reducer in store.ts
-      // localStorage will also be cleared by the root reducer
       return initialState;
     },
     initializeAuth(state: AuthState) {
