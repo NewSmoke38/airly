@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, ArrowLeft, AlertCircle, CheckCircle, Image as ImageIcon, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { tweetService } from '../../services/tweetService';
 
 interface ValidationErrors {
@@ -179,9 +180,11 @@ export const UploadPage: React.FC = () => {
       };
       
       await tweetService.createTweet(uploadData);
+      toast.success('Post created successfully!');
       navigate('/dashboard');
     } catch (error: any) {
       setError(error.response?.data?.message || 'Upload failed. Please try again.');
+      toast.error(error.response?.data?.message || 'Upload failed. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -233,7 +236,6 @@ export const UploadPage: React.FC = () => {
             <p className="text-gray-600">Share your creativity with the world</p>
           </div>
 
-          {/* Title Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Title <span className="text-red-500">*</span>
@@ -270,7 +272,6 @@ export const UploadPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Content Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Description <span className="text-red-500">*</span>
@@ -307,86 +308,73 @@ export const UploadPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Tags Section */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tags <span className="text-gray-400">(optional)</span>
+            <label htmlFor="tags-input" className="block text-sm font-medium text-gray-700 mb-2">
+              Tags
             </label>
-            
-            {/* Tag Display */}
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-3">
-                {tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium"
-                  >
-                    #{tag}
-                    <button
-                      type="button"
-                      onClick={() => removeTag(tag)}
-                      className="ml-2 text-amber-600 hover:text-amber-800 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Tag Input */}
             <div className="relative">
               <input
                 type="text"
+                id="tags-input"
                 value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
+                onChange={(e) => {
+                  setTagInput(e.target.value);
+                  if (!showTagSuggestions) {
+                    setShowTagSuggestions(true);
+                  }
+                }}
                 onKeyDown={handleTagInputKeyDown}
                 onFocus={() => setShowTagSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
-                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 ${
-                  validationErrors.tags
-                    ? 'border-red-300 bg-red-50'
-                    : 'border-gray-200'
-                }`}
-                placeholder="Add tags (press Enter or comma to add)"
-                maxLength={50}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
+                placeholder="Type a tag and press Enter..."
               />
-
-              {/* Tag Suggestions Dropdown */}
               {showTagSuggestions && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto">
-                  {getTagSuggestions().map((suggestion, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => addTag(suggestion)}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors first:rounded-t-xl last:rounded-b-xl"
-                    >
-                      <span className="text-gray-600">#</span>
-                      <span className="text-gray-900">{suggestion}</span>
-                    </button>
-                  ))}
-                  {getTagSuggestions().length === 0 && (
-                    <div className="px-4 py-2 text-gray-500 text-sm">
-                      No suggestions found
-                    </div>
-                  )}
+                <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 p-2">
+                  <p className="text-xs text-gray-500 px-2 pb-1 font-medium">Suggestions</p>
+                  <div className="flex flex-wrap gap-2">
+                    {getTagSuggestions().map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => addTag(tag)}
+                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-amber-100 hover:text-amber-800 transition-colors"
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
 
-            <div className="mt-1 flex justify-between items-center">
-              {validationErrors.tags ? (
-                <div className="flex items-center space-x-2 text-red-600">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="text-sm">{validationErrors.tags}</span>
-                </div>
-              ) : (
-                <span className="text-sm text-gray-500">
-                  {tags.length}/10 tags • Press Enter or comma to add
-                </span>
-              )}
+            <div className="mt-4 p-4 border border-gray-200 rounded-xl min-h-[12rem] max-h-[12rem] overflow-y-auto">
+              <div className="flex flex-wrap gap-3">
+                {tags.length > 0 ? (
+                  tags.map((tag) => (
+                    <div
+                      key={tag}
+                      className="flex items-center space-x-2 bg-amber-500 text-white rounded-full pl-4 pr-3 py-1.5 text-sm font-semibold"
+                    >
+                      <span>{tag}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="bg-amber-600/50 hover:bg-amber-600 rounded-full p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center w-full self-center">Added tags will appear here</p>
+                )}
+              </div>
             </div>
+
+            {validationErrors.tags && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.tags}</p>
+            )}
+            <p className="text-xs text-gray-500 mt-2">Maximum 10 tags.</p>
           </div>
 
           {/* Media Upload */}

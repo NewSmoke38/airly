@@ -9,6 +9,7 @@ interface HomePageProps {
   error?: string | null;
   onRetry?: () => void;
   onEditPost: (post: Post) => void;
+  onDeletePost: (post: Post) => void;
   onPostClick: (post: Post) => void;
   onTagClick?: (tag: string) => void;
   selectedTag?: string | null;
@@ -21,6 +22,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   error, 
   onRetry, 
   onEditPost, 
+  onDeletePost,
   onPostClick,
   onTagClick,
   selectedTag,
@@ -124,9 +126,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           />
         </div>
 
-        {/* Filters */}
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between space-y-4 xl:space-y-0">
-          {/* Category Filter */}
           <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
             <div className="flex items-center space-x-2">
               <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 flex-shrink-0" />
@@ -155,7 +155,6 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
           </div>
 
-          {/* Sort Options */}
           <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-2">
             <span className="text-xs sm:text-sm text-gray-500 font-medium">Sort by:</span>
             <div className="flex flex-wrap gap-1 sm:gap-1">
@@ -182,7 +181,6 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
       </div>
 
-      {/* Selected Tag Filter */}
       {selectedTag && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <div className="flex items-center justify-between">
@@ -204,7 +202,6 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
       )}
 
-      {/* Results Info */}
       <div className="flex items-center justify-between px-2 sm:px-0">
         <p className="text-sm sm:text-base text-gray-600">
           Showing <span className="font-semibold text-gray-900">{filteredPosts.length}</span> results
@@ -217,10 +214,10 @@ export const HomePage: React.FC<HomePageProps> = ({
         </p>
       </div>
 
-      {/* Posts Grid */}
       <PostGrid 
         posts={filteredPosts} 
         onEditPost={onEditPost} 
+        onDeletePost={onDeletePost}
         onPostClick={onPostClick}
         onLoadMore={() => {}}
         hasMore={false}

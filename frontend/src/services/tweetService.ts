@@ -7,6 +7,13 @@ export interface CreateTweetData {
   tags?: string[];
 }
 
+export interface EditTweetData {
+  title?: string;
+  content?: string;
+  media?: File;
+  tags?: string[];
+}
+
 export interface Tweet {
   _id: string;
   title: string;
@@ -51,6 +58,33 @@ class TweetService {
         'Content-Type': 'multipart/form-data',
       },
     });
+    return response.data;
+  }
+
+  async editTweet(tweetId: string, data: EditTweetData): Promise<ApiResponse<Tweet>> {
+    const formData = new FormData();
+    if (data.title) formData.append('title', data.title);
+    if (data.content) formData.append('content', data.content);
+    if (data.media) formData.append('media', data.media);
+    
+    if (data.tags && data.tags.length > 0) {
+      data.tags.forEach(tag => {
+        formData.append('tags[]', tag);
+      });
+    }
+
+    
+    
+    const response = await axios.patch(`/tweets/${tweetId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  }
+
+  async deleteTweet(tweetId: string): Promise<ApiResponse<{}>> {
+    const response = await axios.delete(`/tweets/${tweetId}`);
     return response.data;
   }
 
@@ -242,5 +276,7 @@ class TweetService {
     return `${window.location.origin}/dashboard/post/${tweetId}`;
   }
 }
+
+
 
 export const tweetService = new TweetService(); 

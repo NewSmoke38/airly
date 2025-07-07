@@ -34,6 +34,7 @@ export interface Post {
   views?: number;
   tags?: string[];
   user?: {
+    _id: string;
     username: string;
     fullName: string;
     pfp: string;

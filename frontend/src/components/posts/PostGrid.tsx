@@ -5,6 +5,7 @@ import { Post } from '../../types';
 interface PostGridProps {
   posts: Post[];
   onEditPost?: (post: Post) => void;
+  onDeletePost?: (post: Post) => void;
   onPostClick: (post: Post) => void;
   onLoadMore: () => void;
   hasMore: boolean;
@@ -16,6 +17,7 @@ interface PostGridProps {
 export const PostGrid: React.FC<PostGridProps> = ({
   posts,
   onEditPost,
+  onDeletePost,
   onPostClick,
   onLoadMore,
   hasMore,
@@ -49,6 +51,7 @@ export const PostGrid: React.FC<PostGridProps> = ({
           <PostCard
             post={post}
             onEdit={onEditPost ? () => onEditPost(post) : undefined}
+            onDelete={onDeletePost ? () => onDeletePost(post) : undefined}
             onClick={() => onPostClick(post)}
             onTagClick={onTagClick}
           />

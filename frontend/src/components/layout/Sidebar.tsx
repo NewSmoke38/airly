@@ -32,7 +32,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'home', icon: Home, label: 'Home', path: '/dashboard' },
     { id: 'favorites', icon: Heart, label: 'Favorites', path: '/favorites' },
     { id: 'saved', icon: Bookmark, label: 'Collections', path: '/saved' },
-    { id: 'following', icon: Users, label: 'Following', path: '/following' },
     { id: 'profile', icon: User, label: 'Profile', path: '/profile' },
   ];
 
