@@ -11,7 +11,7 @@ const createTweet = asyncHandler(async (req, res) => {
     const { title, content, tags } = req.body;
 
 
-console.log("req.user:", req.user);
+    console.log("req.user:", req.user);
     if (!title || !content) {
         throw new ApiError(400, "Title and content are required");
     }
@@ -20,7 +20,7 @@ console.log("req.user:", req.user);
 
     if (req.file) {
 
-const uploadResult = await uploadOnCloudinary(req.file.path);
+        const uploadResult = await uploadOnCloudinary(req.file.path);
         mediaUrl = uploadResult.url;
 
     } else {
@@ -31,7 +31,7 @@ const uploadResult = await uploadOnCloudinary(req.file.path);
     if (tags) {
         const tagArray = Array.isArray(tags) ? tags : tags.split(',').map(tag => tag.trim());
         processedTags = tagArray
-            .filter(tag => tag.length > 0)  
+            .filter(tag => tag.length > 0)
             .slice(0, 10)
             .map(tag => tag.toLowerCase());
     }
@@ -41,13 +41,13 @@ const uploadResult = await uploadOnCloudinary(req.file.path);
         content,
         media: mediaUrl,
         tags: processedTags,
-        user: req.user._id.toString()   
+        user: req.user._id
     });
     return res
-    .status(201)
-    .json(
-        new ApiResponse(201, tweet, "Tweet created successfully")
-    );
+        .status(201)
+        .json(
+            new ApiResponse(201, tweet, "Tweet created successfully")
+        );
 });
 
 
@@ -60,8 +60,8 @@ const deleteTweet = asyncHandler(async (req, res) => {
     }
 
     if (!tweet.user || !req.user || !req.user._id) {
-    throw new ApiError(403, "Not authorized or tweet/user missing");
-} 
+        throw new ApiError(403, "Not authorized or tweet/user missing");
+    }
     if (tweet.user.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You are not authorized to delete this tweet");
     }
@@ -69,15 +69,15 @@ const deleteTweet = asyncHandler(async (req, res) => {
     await tweet.deleteOne();
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(200, {}, "Tweet deleted successfully")
-    );
+        .status(200)
+        .json(
+            new ApiResponse(200, {}, "Tweet deleted successfully")
+        );
 });
 
 
 const editTweet = asyncHandler(async (req, res) => {
-    const tweetId = req.params.id;     
+    const tweetId = req.params.id;
     const { title, content, tags } = req.body;
 
 
@@ -93,7 +93,7 @@ const editTweet = asyncHandler(async (req, res) => {
 
     if (title) tweet.title = title;
     if (content) tweet.content = content;
-    
+
 
     if (tags !== undefined) {
         let processedTags = [];
@@ -106,7 +106,7 @@ const editTweet = asyncHandler(async (req, res) => {
         }
         tweet.tags = processedTags;
     }
-    
+
     if (req.file) {
         const uploadResult = await uploadOnCloudinary(req.file.path);
         tweet.media = uploadResult.url;
@@ -118,10 +118,10 @@ const editTweet = asyncHandler(async (req, res) => {
     await tweet.save();
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(200, tweet, "Tweet edited successfully")
-    );
+        .status(200)
+        .json(
+            new ApiResponse(200, tweet, "Tweet edited successfully")
+        );
 });
 
 
@@ -136,7 +136,7 @@ const searchTweetsByTags = asyncHandler(async (req, res) => {
     const limit = parseInt(batch) + 1;
 
     let matchStage = {
-        tags: { $in: tagArray }  
+        tags: { $in: tagArray }
     };
 
     if (cursor) {
@@ -145,9 +145,9 @@ const searchTweetsByTags = asyncHandler(async (req, res) => {
         };
     }
 
-const tweets = await Tweet.aggregate([
+    const tweets = await Tweet.aggregate([
         {
-             $lookup: {
+            $lookup: {
                 from: "users",
                 localField: "user",
                 foreignField: "_id",
@@ -155,13 +155,14 @@ const tweets = await Tweet.aggregate([
                 pipeline: [
                     {
                         $project: {
+                            _id: 1,
                             username: 1,
                             fullName: 1,
                             pfp: 1
                         }
-                  
+
                     }
-            ]
+                ]
             }
         },
         {
@@ -190,7 +191,7 @@ const tweets = await Tweet.aggregate([
     ]);
 
     const hasMore = tweets.length > batch;
-    
+
     if (hasMore) {
         tweets.pop();
     }
@@ -256,6 +257,7 @@ const searchContent = asyncHandler(async (req, res) => {
                     pipeline: [
                         {
                             $project: {
+                                _id: 1,
                                 username: 1,
                                 fullName: 1,
                                 pfp: 1
@@ -296,11 +298,11 @@ const searchContent = asyncHandler(async (req, res) => {
 
         results.tweets = tweets;
         results.hasMore = tweets.length > batch;
-        
+
         if (results.hasMore) {
             results.tweets.pop();
         }
-        
+
         results.nextCursor = results.hasMore ? results.tweets[results.tweets.length - 1]._id : null;
     }
 
@@ -313,8 +315,8 @@ const searchContent = asyncHandler(async (req, res) => {
         };
 
         const users = await User.find(userMatchStage)
-        .select('username fullName pfp joinedAt')
-        .limit(10)
+            .select('username fullName pfp joinedAt')
+            .limit(10)
             .sort({ joinedAt: -1 });
 
         results.users = users;
@@ -329,8 +331,8 @@ const searchContent = asyncHandler(async (req, res) => {
                 searchType,
                 totalResults: results.tweets.length + results.users.length
             },
-         "Search completed successfully"
-       
+            "Search completed successfully"
+
         )
     );
 });
@@ -340,16 +342,16 @@ const getPopularTags = asyncHandler(async (req, res) => {
 
     const popularTags = await Tweet.aggregate([
         {
-            $unwind: "$tags" 
+            $unwind: "$tags"
         },
         {
             $group: {
                 _id: "$tags",
-                count: { $sum: 1 } 
+                count: { $sum: 1 }
             }
         },
         {
-            $sort: { count: -1 }  
+            $sort: { count: -1 }
         },
         {
             $limit: parseInt(limit)
@@ -381,5 +383,5 @@ export {
     searchTweetsByTags,
     searchContent,
     getPopularTags
-   }
+}
 

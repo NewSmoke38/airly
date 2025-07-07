@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { HomePage } from './HomePage';
 import { PostDetailModal } from '../modals/PostDetailModal';
+import { EditPostModal } from '../modals/EditPostModal';
+import { ConfirmDeleteModal } from '../modals/ConfirmDeleteModal';
 import { Post } from '../../types';
 import { feedService } from '../../services/feedService';
+import { tweetService } from '../../services/tweetService';
 
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -33,6 +37,9 @@ export const DashboardPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [deletingPost, setDeletingPost] = useState<Post | null>(null);
+  const [isSubmittingDelete, setIsSubmittingDelete] = useState(false);
 
 
   const fetchPosts = async (tag?: string) => {
@@ -116,10 +123,42 @@ export const DashboardPage: React.FC = () => {
   };
 
   const handleEditPost = (post: Post) => {
-    console.log('Edit post:', post);
+    setEditingPost(post);
+  };
+
+  const handleDeletePost = (postToDelete: Post) => {
+    setDeletingPost(postToDelete);
+  };
+
+     const handleConfirmDelete = async () => {
+    if (!deletingPost) return;
+
+       setIsSubmittingDelete(true);
+
+
+    try {
+      await tweetService.deleteTweet(deletingPost._id!);
+      setDeletingPost(null);
+      if (selectedPost?._id === deletingPost._id) {
+        handleCloseModal();
+      }
+      fetchPosts(selectedTag || undefined);
+      toast.success('Post deleted successfully!');
+
+
+    } catch (err) {
+      console.error('Failed to delete post:', err);
+      toast.error('Failed to delete post. Please try again.');
+
+      
+    } finally {
+      setIsSubmittingDelete(false);
+    }
   };
 
   const handlePostUpdate = (updatedPost: Partial<Post>) => {
+    const updatedPostComplete = { ...posts.find(p => p._id === updatedPost._id), ...updatedPost } as Post;
+    
     setPosts(prevPosts => 
       prevPosts.map(post => 
         (post._id || post.id) === (updatedPost._id || updatedPost.id)
@@ -130,6 +169,10 @@ export const DashboardPage: React.FC = () => {
     
     if (selectedPost && ((selectedPost._id || selectedPost.id) === (updatedPost._id || updatedPost.id))) {
       setSelectedPost({ ...selectedPost, ...updatedPost });
+    }
+
+    if (editingPost && editingPost._id === updatedPost._id) {
+      setEditingPost(updatedPostComplete);
     }
   };
 
@@ -159,6 +202,7 @@ export const DashboardPage: React.FC = () => {
         onRetry={handleRetry}
         onPostClick={handlePostClick} 
         onEditPost={handleEditPost}
+        onDeletePost={handleDeletePost}
         onTagClick={handleTagClick}
         selectedTag={selectedTag}
         onClearTag={handleClearTag}
@@ -174,8 +218,31 @@ export const DashboardPage: React.FC = () => {
           hasPrevious={currentPostIndex > 0}
           hasNext={currentPostIndex < posts.length - 1}
           onPostUpdate={handlePostUpdate}
+          onEdit={handleEditPost}
+          onDelete={handleDeletePost}
         />
       )}
+
+      {editingPost && (
+        <EditPostModal
+          post={editingPost}
+          onClose={() => setEditingPost(null)}
+          onPostUpdate={(_updatedPost) => {
+            setEditingPost(null);
+            fetchPosts(selectedTag || undefined);
+            toast.success('Post updated successfully!');
+          }}
+        />
+      )}
+
+      <ConfirmDeleteModal
+        isOpen={!!deletingPost}
+        onClose={() => setDeletingPost(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Post?"
+        message="Are you sure you want to permanently delete this post? This action cannot be undone."
+        isDeleting={isSubmittingDelete}
+      />
     </>
   );
 }; 

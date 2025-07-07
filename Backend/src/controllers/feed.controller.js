@@ -36,6 +36,7 @@ const getFeedPosts = asyncHandler(async (req, res) => {
                     pipeline: [
                         {
                             $project: {
+                                _id: 1,
                                 username: 1,
                                 fullName: 1,
                                 pfp: 1
