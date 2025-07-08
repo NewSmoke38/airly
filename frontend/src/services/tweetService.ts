@@ -73,8 +73,6 @@ class TweetService {
       });
     }
 
-    
-    
     const response = await axios.patch(`/tweets/${tweetId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -276,7 +274,5 @@ class TweetService {
     return `${window.location.origin}/dashboard/post/${tweetId}`;
   }
 }
-
-
 
 export const tweetService = new TweetService(); 

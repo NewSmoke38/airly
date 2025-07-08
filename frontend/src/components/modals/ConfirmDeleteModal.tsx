@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { X, AlertTriangle, Loader2 } from 'lucide-react';
 
 interface ConfirmDeleteModalProps {
-   isOpen: boolean;
+  isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
   title: string;
@@ -24,19 +24,17 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
         onClose();
       }
     };
-
     if (isOpen) {
-    document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('keydown', handleKeyDown);
     }
     return () => {
-    document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   return (
-
     <div
       className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm"
       onClick={onClose}
@@ -49,8 +47,8 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
           <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
             <AlertTriangle className="h-8 w-8 text-red-600" />
           </div>
-        <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
-        <p className="text-gray-600 mt-2">{message}</p>
+          <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
+          <p className="text-gray-600 mt-2">{message}</p>
         </div>
         <div className="bg-gray-50/50 px-6 py-4 rounded-b-2xl flex justify-end space-x-3">
           <button
@@ -69,19 +67,15 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
           >
             {isDeleting ? (
               <>
-
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span>Deleting...</span>
               </>
             ) : (
               <span>Delete</span>
             )}
-  </button>
-
+          </button>
         </div>
-
       </div>
-
-  </div>
+    </div>
   );
 }; 

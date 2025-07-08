@@ -37,16 +37,17 @@ export const DashboardPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState('recent');
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [deletingPost, setDeletingPost] = useState<Post | null>(null);
   const [isSubmittingDelete, setIsSubmittingDelete] = useState(false);
 
 
-  const fetchPosts = async (tag?: string) => {
+  const fetchPosts = async (tag?: string, sort?: string) => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await feedService.getFeedPosts(undefined, 20, tag || undefined);
+      const response = await feedService.getFeedPosts(undefined, 20, tag || undefined, sort || undefined);
       setPosts(response.posts || []);
     } catch (error: any) {
       setError(error.response?.data?.message || 'Failed to load posts. Please try again.');
@@ -59,12 +60,14 @@ export const DashboardPage: React.FC = () => {
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const tagParam = searchParams.get('tag');
+    const sortParam = searchParams.get('sort');
     setSelectedTag(tagParam);
+    setSortBy(sortParam || 'recent');
   }, [location.search]);
 
   useEffect(() => {
-    fetchPosts(selectedTag || undefined);
-  }, [selectedTag]);
+    fetchPosts(selectedTag || undefined, sortBy);
+  }, [selectedTag, sortBy]);
 
   useEffect(() => {
     
@@ -130,27 +133,21 @@ export const DashboardPage: React.FC = () => {
     setDeletingPost(postToDelete);
   };
 
-     const handleConfirmDelete = async () => {
+  const handleConfirmDelete = async () => {
     if (!deletingPost) return;
 
-       setIsSubmittingDelete(true);
-
-
+    setIsSubmittingDelete(true);
     try {
       await tweetService.deleteTweet(deletingPost._id!);
       setDeletingPost(null);
       if (selectedPost?._id === deletingPost._id) {
         handleCloseModal();
       }
-      fetchPosts(selectedTag || undefined);
+      fetchPosts(selectedTag || undefined, sortBy);
       toast.success('Post deleted successfully!');
-
-
     } catch (err) {
       console.error('Failed to delete post:', err);
       toast.error('Failed to delete post. Please try again.');
-
-      
     } finally {
       setIsSubmittingDelete(false);
     }
@@ -177,7 +174,7 @@ export const DashboardPage: React.FC = () => {
   };
 
   const handleRetry = () => {
-    fetchPosts(selectedTag || undefined);
+    fetchPosts(selectedTag || undefined, sortBy);
   };
 
   const handleTagClick = (tag: string) => {
@@ -206,6 +203,8 @@ export const DashboardPage: React.FC = () => {
         onTagClick={handleTagClick}
         selectedTag={selectedTag}
         onClearTag={handleClearTag}
+        sortBy={sortBy}
+        onSortByChange={setSortBy}
       />
       
       {/* Only show modal on desktop */}
@@ -229,7 +228,7 @@ export const DashboardPage: React.FC = () => {
           onClose={() => setEditingPost(null)}
           onPostUpdate={(_updatedPost) => {
             setEditingPost(null);
-            fetchPosts(selectedTag || undefined);
+            fetchPosts(selectedTag || undefined, sortBy);
             toast.success('Post updated successfully!');
           }}
         />

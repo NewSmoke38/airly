@@ -10,6 +10,7 @@ import { tweetService } from '../../services/tweetService';
 import { Post } from '../../types';
 import { EditPostModal } from '../modals/EditPostModal';
 import { ConfirmDeleteModal } from '../modals/ConfirmDeleteModal';
+import EditProfileModal from '../modals/EditProfileModal';
 
 interface UserProfile {
   _id: string;
@@ -42,6 +43,7 @@ export const ProfilePage: React.FC = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [deletingPost, setDeletingPost] = useState<Post | null>(null);
@@ -100,25 +102,21 @@ export const ProfilePage: React.FC = () => {
     }
   };
   
-      const fetchLikedPosts = async () => {
-
+  const fetchLikedPosts = async () => {
     try {
       const likedData = await tweetService.getUserLikedTweets();
       setLikedPosts(likedData.data.tweets || []);
-
     } catch (error) {
       console.error('Error fetching liked posts:', error);
       setLikedPosts([]);
     }
   };
 
-    
-  
   const handleEditPost = (post: Post) => {
     setEditingPost(post);
   };
 
-    const handleDeletePost = (post: Post) => {
+  const handleDeletePost = (post: Post) => {
     setDeletingPost(post);
   };
 
@@ -126,18 +124,14 @@ export const ProfilePage: React.FC = () => {
     if (!deletingPost) return;
 
     setIsSubmittingDelete(true);
-
     try {
-
       await tweetService.deleteTweet(deletingPost._id!);
       setDeletingPost(null);
       await fetchUserPosts();
       toast.success('Post deleted successfully');
-
     } catch (err) {
       console.error('Failed to delete post:', err);
       toast.error('Failed to delete post. Please try again.');
-
     } finally {
       setIsSubmittingDelete(false);
     }
@@ -199,6 +193,16 @@ export const ProfilePage: React.FC = () => {
     navigate(`/dashboard?tag=${encodeURIComponent(tag)}`);
   };
 
+  const handleProfileUpdate = (updatedUser: Partial<UserProfile>) => {
+    setProfile(prevProfile => {
+      if (!prevProfile) return null;
+      return {
+        ...prevProfile,
+        ...updatedUser,
+      };
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -211,7 +215,6 @@ export const ProfilePage: React.FC = () => {
                 <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
                 <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
                 <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-
               </div>
             </div>
           </div>
@@ -236,6 +239,9 @@ export const ProfilePage: React.FC = () => {
       </div>
     );
   }
+
+  const { relationshipStatus: relStatus, followerCount, followingCount } = profile;
+  const { isOwnProfile } = relStatus || {};
 
   const totalViews = userPosts.reduce((sum, post) => sum + (post.views || 0), 0);
   const totalLikes = userPosts.reduce((sum, post) => sum + (post.likes || 0), 0);
@@ -274,6 +280,7 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      {/* Profile Header */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-6">
         <div className="flex items-start space-x-6">
           <div className="relative">
@@ -293,10 +300,13 @@ export const ProfilePage: React.FC = () => {
               </div>
               
               <div className="flex items-center space-x-3">
-                {profile.relationshipStatus.isOwnProfile ? (
-                  <button className="flex items-center space-x-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
+                {isOwnProfile ? (
+                  <button 
+                    onClick={() => setIsEditProfileOpen(true)}
+                    className="flex items-center space-x-2 px-4 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors"
+                  >
                     <Edit className="w-4 h-4" />
-                    <span className="font-medium">Edit Profile</span>
+                    <span>Edit Profile</span>
                   </button>
                 ) : (
                   <>
@@ -313,6 +323,7 @@ export const ProfilePage: React.FC = () => {
                       </button>
                     )}
                     
+                    {/* Three Dot Menu */}
                     <div className="relative">
                       <button
                         onClick={() => setShowMenu(!showMenu)}
@@ -362,6 +373,7 @@ export const ProfilePage: React.FC = () => {
           </div>
         </div>
         
+        {/* Stats */}
         <div className="grid grid-cols-4 gap-6 mt-8 pt-8 border-t border-gray-100">
           <div className="text-center">
             <div className="text-2xl font-bold text-gray-900">{userPosts.length}</div>
@@ -382,6 +394,7 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
       
+      {/* Tabs */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="flex border-b border-gray-100">
           <button
@@ -420,7 +433,6 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-
       {editingPost && (
         <EditPostModal
           post={editingPost}
@@ -433,7 +445,6 @@ export const ProfilePage: React.FC = () => {
         />
       )}
 
-
       <ConfirmDeleteModal
         isOpen={!!deletingPost}
         onClose={() => setDeletingPost(null)}
@@ -442,6 +453,15 @@ export const ProfilePage: React.FC = () => {
         message="Are you sure you want to permanently delete this post? This action cannot be undone."
         isDeleting={isSubmittingDelete}
       />
+
+      {profile && isOwnProfile && (
+        <EditProfileModal
+            isOpen={isEditProfileOpen}
+            onClose={() => setIsEditProfileOpen(false)}
+            user={profile}
+            onProfileUpdate={handleProfileUpdate}
+        />
+      )}
     </div>
   );
 };

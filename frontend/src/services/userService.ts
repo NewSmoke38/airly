@@ -51,6 +51,31 @@ interface RelationshipResponse {
   message: string;
 }
 
+export interface UserProfileData {
+  _id: string;
+  username: string;
+  fullName: string;
+  email: string;
+  pfp: string;
+  bio?: string;
+  joinedDate: string;
+  followerCount: number;
+  followingCount: number;
+  relationshipStatus: {
+    isOwnProfile: boolean;
+    isFollowing: boolean;
+    isBlocked: boolean;
+  };
+}
+
+export interface UpdateProfileData {
+  fullName?: string;
+  bio?: string;
+  pfp?: File;
+}
+
+const API_BASE_URL = '/users';
+
 export const userService = {
   async register(data: RegisterData): Promise<AuthResponse> {
     const formData = new FormData();
@@ -102,8 +127,30 @@ export const userService = {
     return response.data.data;
   },
 
-  async getUserRelationship(userId: string) {
-    const response = await axiosInstance.get(`users/${userId}/relationship`);
+  async getUserRelationship(userId: string): Promise<{ isFollowing: boolean; isFollowedBy: boolean; isBlocked: boolean }> {
+    const response = await axiosInstance.get<ApiResponse<{ isFollowing: boolean; isFollowedBy: boolean; isBlocked: boolean }>>(`${API_BASE_URL}/${userId}/relationship`);
+    return response.data.data;
+  },
+
+  async updateUserProfile(data: UpdateProfileData): Promise<UserProfileData> {
+    const formData = new FormData();
+    if (data.fullName) formData.append('fullName', data.fullName);
+    if (data.bio) formData.append('bio', data.bio);
+    if (data.pfp) formData.append('pfp', data.pfp);
+
+    const response = await axiosInstance.patch<ApiResponse<UserProfileData>>(`${API_BASE_URL}/update-profile`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.data;
+  },
+
+  async searchUsers(query: string): Promise<User[]> {
+    const params = new URLSearchParams();
+    params.append('query', query);
+
+    const response = await axiosInstance.get<ApiResponse<User[]>>(`${API_BASE_URL}/search`, { params });
     return response.data.data;
   },
 }; 

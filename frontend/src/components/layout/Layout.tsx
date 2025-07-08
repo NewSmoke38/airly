@@ -45,7 +45,7 @@ export const Layout: React.FC = () => {
               <span className="text-white font-bold text-sm">C</span>
             </div>
             <span className="font-bold text-xl bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-              CreativeHub
+              Airly
             </span>
           </div>
           <button

@@ -14,6 +14,8 @@ interface HomePageProps {
   onTagClick?: (tag: string) => void;
   selectedTag?: string | null;
   onClearTag?: () => void;
+  sortBy: string;
+  onSortByChange: (sort: string) => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ 
@@ -26,10 +28,11 @@ export const HomePage: React.FC<HomePageProps> = ({
   onPostClick,
   onTagClick,
   selectedTag,
-  onClearTag
+  onClearTag,
+  sortBy,
+  onSortByChange
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('recent');
 
   const categories = [
     { id: 'all', label: 'All', tag: null },
@@ -54,18 +57,6 @@ export const HomePage: React.FC<HomePageProps> = ({
                          content.toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesSearch;
-  }).sort((a, b) => {
-    switch (sortBy) {
-      case 'popular':
-        return (b.likes || 0) - (a.likes || 0);
-      case 'liked':
-        return (b.likes || 0) - (a.likes || 0);
-      default: {
-        const aDate = new Date(a.createdAt || 0).getTime();
-        const bDate = new Date(b.createdAt || 0).getTime();
-        return bDate - aDate;
-      }
-    }
   });
 
   if (error && !isLoading) {
@@ -126,7 +117,9 @@ export const HomePage: React.FC<HomePageProps> = ({
           />
         </div>
 
+        {/* Filters */}
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between space-y-4 xl:space-y-0">
+          {/* Category Filter */}
           <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
             <div className="flex items-center space-x-2">
               <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 flex-shrink-0" />
@@ -155,6 +148,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
           </div>
 
+          {/* Sort Options */}
           <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-2">
             <span className="text-xs sm:text-sm text-gray-500 font-medium">Sort by:</span>
             <div className="flex flex-wrap gap-1 sm:gap-1">
@@ -163,7 +157,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 return (
                   <button
                     key={option.id}
-                    onClick={() => setSortBy(option.id)}
+                    onClick={() => onSortByChange(option.id)}
                     className={`flex items-center space-x-1 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${
                       sortBy === option.id
                         ? 'bg-amber-100 text-amber-700 border border-amber-200'
@@ -181,6 +175,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
       </div>
 
+      {/* Selected Tag Filter */}
       {selectedTag && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <div className="flex items-center justify-between">
@@ -202,6 +197,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
       )}
 
+      {/* Results Info */}
       <div className="flex items-center justify-between px-2 sm:px-0">
         <p className="text-sm sm:text-base text-gray-600">
           Showing <span className="font-semibold text-gray-900">{filteredPosts.length}</span> results
@@ -214,6 +210,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         </p>
       </div>
 
+      {/* Posts Grid */}
       <PostGrid 
         posts={filteredPosts} 
         onEditPost={onEditPost} 

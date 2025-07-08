@@ -18,8 +18,6 @@ export const EditPostModal: React.FC<EditPostModalProps> = ({ post, onClose, onP
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-
-
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -31,7 +29,6 @@ export const EditPostModal: React.FC<EditPostModalProps> = ({ post, onClose, onP
       window.removeEventListener('keydown', handleEsc);
     };
   }, [onClose]);
-
 
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -69,21 +66,17 @@ export const EditPostModal: React.FC<EditPostModalProps> = ({ post, onClose, onP
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm" onClick={onClose}>
-     
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="p-6">
-
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-800">Edit Post</h2>
             <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
               <X className="w-6 h-6 text-gray-500" />
             </button>
           </div>
-
-
           <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <div className="mb-4">
+              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Title</label>
               <input
                 type="text"
                 id="title"
@@ -123,14 +116,11 @@ export const EditPostModal: React.FC<EditPostModalProps> = ({ post, onClose, onP
                 {mediaPreview && (
                   <img src={mediaPreview} alt="Preview" className="w-24 h-24 object-cover rounded-lg" />
                 )}
-
-
                 <div className="flex-1">
                   <label htmlFor="media-upload" className="cursor-pointer bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 flex items-center justify-center space-x-2 transition-colors">
-                <Image className="w-5 h-5 text-gray-500" />
+                    <Image className="w-5 h-5 text-gray-500" />
                     <span className="text-sm font-medium text-gray-600">{mediaFile ? 'Change media' : 'Upload new media'}</span>
                   </label>
-
                   <input id="media-upload" type="file" className="hidden" onChange={handleMediaChange} accept="image/*,video/*" />
                   <p className="text-xs text-gray-500 mt-2">Leave empty to keep the existing media.</p>
                 </div>
@@ -138,7 +128,6 @@ export const EditPostModal: React.FC<EditPostModalProps> = ({ post, onClose, onP
             </div>
 
             {error && (
-              
               <div className="bg-red-50 text-red-700 p-3 rounded-lg mb-4 text-sm">
                 {error}
               </div>
@@ -166,16 +155,10 @@ export const EditPostModal: React.FC<EditPostModalProps> = ({ post, onClose, onP
                 ) : (
                   <span>Save Changes</span>
                 )}
-              
-              
               </button>
-
             </div>
-
-      </form>
-        
+          </form>
         </div>
-      
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, User, Upload, Heart, Bookmark, LogOut, Users, Shield } from 'lucide-react';
+import { Home, User, Upload, Heart, Bookmark, LogOut, Shield } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '../../store';
@@ -68,7 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="p-4 border-b border-gray-100/50">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-              <span className="text-white font-bold text-sm">C</span>
+              <span className="text-white font-bold text-sm">A</span>
             </div>
             <span 
               className={`
@@ -77,7 +77,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 lg:block
               `}
             >
-              CreativeHub
+              Airly
             </span>
           </div>
         </div>

@@ -18,7 +18,6 @@ export const UploadPage: React.FC = () => {
   const [tagInput, setTagInput] = useState('');
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [media, setMedia] = useState<File | null>(null);
-  const [type, setType] = useState('image');
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
@@ -236,6 +235,7 @@ export const UploadPage: React.FC = () => {
             <p className="text-gray-600">Share your creativity with the world</p>
           </div>
 
+          {/* Title Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Title <span className="text-red-500">*</span>
@@ -272,6 +272,7 @@ export const UploadPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Content Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Description <span className="text-red-500">*</span>
@@ -308,6 +309,7 @@ export const UploadPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Tags Field */}
           <div>
             <label htmlFor="tags-input" className="block text-sm font-medium text-gray-700 mb-2">
               Tags
@@ -378,97 +380,44 @@ export const UploadPage: React.FC = () => {
           </div>
 
           {/* Media Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Media <span className="text-red-500">*</span>
-            </label>
-            
+          <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center transition-colors duration-200 hover:border-amber-400 bg-gray-50 hover:bg-amber-50">
             {previewUrl ? (
-              <div className="relative">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="w-full h-64 object-cover rounded-xl border-2 border-gray-200"
-                />
-                <div className="absolute top-3 left-3 bg-black/50 text-white px-2 py-1 rounded-lg text-xs">
-                  {media && getFileSizeText(media.size)}
-                </div>
+              <div className="relative group">
+                <img src={previewUrl} alt="Preview" className="max-h-60 mx-auto rounded-lg shadow-md"/>
                 <button
-                  type="button"
                   onClick={() => {
-                    setMedia(null);
                     setPreviewUrl(null);
-                    setValidationErrors(prev => ({ ...prev, media: 'Media file is required' }));
+                    setMedia(null);
                   }}
-                  className="absolute top-3 right-3 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                  className="absolute top-2 right-2 bg-black/50 p-1.5 rounded-full text-white hover:bg-black/80 transition-all duration-200"
                 >
-                  ×
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200 ${
-                validationErrors.media
-                  ? 'border-red-300 bg-red-50'
-                  : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-              }`}>
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${
-                  validationErrors.media 
-                    ? 'bg-red-100 text-red-600'
-                    : 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-600'
-                }`}>
-                  <ImageIcon className="w-6 h-6" />
+              <div>
+                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-500">
+                  <ImageIcon className="w-8 h-8" />
                 </div>
-                <p className="text-gray-600 mb-2">
-                  Choose an image file to upload
-                </p>
-                <p className="text-sm text-gray-500 mb-3">
-                  JPEG, PNG, GIF, WebP up to {MAX_MEDIA_SIZE / (1024 * 1024)}MB
-                </p>
+                <label htmlFor="file-upload" className="cursor-pointer text-amber-600 font-semibold hover:text-amber-700">
+                  Upload an image
+                </label>
+                <p className="text-sm text-gray-500 mt-2">PNG, JPG, GIF, WebP up to 10MB</p>
+                <input
+                  id="file-upload"
+                  type="file"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept="image/png, image/jpeg, image/gif, image/webp"
+                />
               </div>
             )}
-            
-            <input
-              type="file"
-              onChange={handleFileChange}
-              accept={ALLOWED_IMAGE_TYPES.join(',')}
-              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 mt-3 ${
-                validationErrors.media
-                  ? 'border-red-300 bg-red-50'
-                  : 'border-gray-200'
-              }`}
-            />
-            
             {validationErrors.media && (
               <div className="mt-2 flex items-center space-x-2 text-red-600">
                 <AlertCircle className="w-4 h-4" />
                 <span className="text-sm">{validationErrors.media}</span>
               </div>
             )}
-            
-            {media && !validationErrors.media && (
-              <div className="mt-2 flex items-center space-x-2 text-green-600">
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-sm">
-                  Selected: {media.name} ({getFileSizeText(media.size)})
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Type Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Type
-            </label>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
-            >
-              <option value="image">Image</option>
-              <option value="video">Video</option>
-              <option value="document">Document</option>
-            </select>
           </div>
 
           {/* Error Display */}
