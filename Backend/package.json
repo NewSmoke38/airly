@@ -1,18 +1,21 @@
 {
-  "name": "vibely",
+  "name": "airly",
   "version": "1.0.0",
   "description": "",
   "type": "module",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
+    "start": "node app.js",
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/app.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/NewSmoke38/Vibely.git"
   },
   "author": "Shivani",
+"engines": {
+  "node": ">=20.0.0"
+},
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/NewSmoke38/Vibely/issues"

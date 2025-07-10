@@ -17,7 +17,7 @@ const startServer = async () => {
     });
 
 
-    app.listen(process.env.PORT || 8000, () => {   // app will listen
+    app.listen(process.env.PORT || 8000, () => {   // app will listen and start the server, imp for aws deployement
         console.log(` Server is running at port :     
             ${process.env.PORT}`);                 
 
