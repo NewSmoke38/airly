@@ -6,6 +6,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
+    "build": "npm install",
     "dev": "nodemon -r dotenv/config --experimental-json-modules src/app.js"
   },
   "repository": {
