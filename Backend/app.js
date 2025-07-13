@@ -5,17 +5,15 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import connectDB from "./src/db/index.js";
 
-// Load environment variables
-dotenv.config({
-    path: './.env'
-});
+// Load environment variables (will use Railway env vars)
+dotenv.config();
 
 const app = express();
 
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
         ? [process.env.FRONTEND_URL] // Add your frontend URL to environment variables
-        : ["http://localhost:3000", "http://localhost:5173"],
+        : ["http://localhost:3000", "http://localhost:5173", "https://airly-git-main-newsmoke38s-projects.vercel.app/"],
     credentials: true
 }));
 
