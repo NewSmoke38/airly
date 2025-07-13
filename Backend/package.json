@@ -13,9 +13,9 @@
     "url": "git+https://github.com/NewSmoke38/Vibely.git"
   },
   "author": "Shivani",
-"engines": {
-  "node": ">=20.0.0"
-},
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/NewSmoke38/Vibely/issues"
