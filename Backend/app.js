@@ -12,7 +12,7 @@ const app = express();
 
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
-        ? ["https://airly.vercel.app", process.env.ALLOWED_ORIGINS].filter(Boolean) // Add your frontend URL to environment variables
+        ? ["https://airly.vercel.app", "https://airly.in", process.env.ALLOWED_ORIGINS].filter(Boolean) // Add your frontend URL to environment variables
         : ["http://localhost:3000", "http://localhost:5173", "https://airly-git-main-newsmoke38s-projects.vercel.app/"],
     credentials: true
 }));
