@@ -43,6 +43,7 @@ import commentRouter from "./src/routes/comment.routes.js";
 import viewsRouter from "./src/routes/views.routes.js";
 import likeRouter from "./src/routes/like.routes.js";
 import bookmarkRouter from "./src/routes/bookmark.routes.js";
+import testRouter from "./src/routes/test.routes.js";
 
 // routes declaration
 app.use("/api/v1/users", userRouter);
@@ -55,10 +56,8 @@ app.use("/api/v1/views", viewsRouter);
 app.use("/api/v1/likes", likeRouter);
 app.use("/api/v1/bookmarks", bookmarkRouter);
 
-// Root route
-app.get('/', (req, res) => {
-  res.send('Yo, backend is live! Welcome to the API.');
-});
+// Test route for backend health check
+app.use("/", testRouter);
 
 // Server startup function
 const startServer = async () => {
