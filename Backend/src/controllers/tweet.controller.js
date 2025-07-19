@@ -10,6 +10,7 @@ import { User } from "../models/user.model.js";
 const createTweet = asyncHandler(async (req, res) => {
     const { title, content, tags } = req.body;
 
+
     console.log("req.user:", req.user);
     if (!title || !content) {
         throw new ApiError(400, "Title and content are required");
@@ -18,8 +19,10 @@ const createTweet = asyncHandler(async (req, res) => {
     let mediaUrl = "";
 
     if (req.file) {
+
         const uploadResult = await uploadOnCloudinary(req.file.path);
         mediaUrl = uploadResult.url;
+
     } else {
         throw new ApiError(400, "Media file is required");
     }
@@ -77,10 +80,12 @@ const editTweet = asyncHandler(async (req, res) => {
     const tweetId = req.params.id;
     const { title, content, tags } = req.body;
 
+
     const tweet = await Tweet.findById(tweetId);
     if (!tweet) {
         throw new ApiError(404, "Tweet not found");
     }
+
 
     if (!tweet.user || tweet.user.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You are not authorized to edit this tweet");

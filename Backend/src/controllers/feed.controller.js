@@ -4,7 +4,7 @@ import { Tweet } from "../models/tweet.model.js";
 import mongoose from "mongoose";
 
 const getFeedPosts = asyncHandler(async (req, res) => {
-    const { sort = 'recent'} = req.query;
+    const { sort = 'recent' } = req.query;
 
     switch (sort) {
         case 'popular':
@@ -61,9 +61,7 @@ const getRecentPosts = asyncHandler(async (req, res) => {
         );
     } catch (error) {
         console.error("Recent feed aggregation error:", error);
-        return res
-        .status(500)
-        .json(new ApiResponse(500, null, "Failed to fetch recent feed posts"));
+        return res.status(500).json(new ApiResponse(500, null, "Failed to fetch recent feed posts"));
     }
 });
 
@@ -89,12 +87,9 @@ const getMostLikedPosts = asyncHandler(async (req, res) => {
                     likeCount: { $size: { $ifNull: ["$likes", []] } }
                 }
             },
-
-
             { $sort: { likeCount: -1, createdAt: -1 } },
             { $skip: skip },
             { $limit: limit },
-
             ...getCommonFeedPipeline()
         ]);
 
@@ -119,7 +114,6 @@ const getMostLikedPosts = asyncHandler(async (req, res) => {
     }
 });
 
-
 const getPopularPosts = asyncHandler(async (req, res) => {
     const { cursor, batch = 20, tag } = req.query;
     const userId = req.user?._id;
@@ -128,7 +122,6 @@ const getPopularPosts = asyncHandler(async (req, res) => {
     const skip = cursor ? parseInt(cursor) : 0;
 
     let matchStage = {};
-
     if (tag) {
         matchStage.tags = {
             $in: [tag]
@@ -145,7 +138,6 @@ const getPopularPosts = asyncHandler(async (req, res) => {
                     viewsCount: { $ifNull: ["$views", 0] }
                 }
             },
-
             {
                 $addFields: {
                     popularityScore: {
@@ -157,21 +149,18 @@ const getPopularPosts = asyncHandler(async (req, res) => {
                     }
                 }
             },
-
             { $sort: { popularityScore: -1, createdAt: -1 } },
             { $skip: skip },
             { $limit: limit },
             ...getCommonFeedPipeline()
         ]);
 
-const finalPosts = processPosts(posts, userId);
-    const hasMore = finalPosts.length === limit;
+        const finalPosts = processPosts(posts, userId);
+        const hasMore = finalPosts.length === limit;
         const nextCursor = hasMore ? (skip + finalPosts.length).toString() : null;
 
 
-        return res
-        .status(200)
-        .json(
+        return res.status(200).json(
             new ApiResponse(
                 200,
                 {
@@ -187,7 +176,6 @@ const finalPosts = processPosts(posts, userId);
         return res.status(500).json(new ApiResponse(500, null, "Failed to fetch popular feed posts"));
     }
 });
-
 
 const getCommonFeedPipeline = () => {
     return [
@@ -254,8 +242,8 @@ const processPostsForRecent = (posts, batch, userId) => {
         posts.pop();
     }
 
-const finalPosts = processPosts(posts, userId);
-const nextCursor = hasMore && finalPosts.length > 0 ? finalPosts[finalPosts.length - 1]._id.toString() : null;
+    const finalPosts = processPosts(posts, userId);
+    const nextCursor = hasMore && finalPosts.length > 0 ? finalPosts[finalPosts.length - 1]._id.toString() : null;
 
     return { finalPosts, nextCursor };
 };

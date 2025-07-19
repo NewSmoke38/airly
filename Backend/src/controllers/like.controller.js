@@ -13,8 +13,8 @@ const likeTweet = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Tweet not found");
     }
 
+    // toggle
     const alreadyLiked = tweet.likes.some(id => id.toString() === userId.toString());
-    
     if (alreadyLiked) {
         tweet.likes = tweet.likes.filter(id => id.toString() !== userId.toString());
         await tweet.save();
@@ -95,16 +95,16 @@ const getMostLikedTweets = asyncHandler(async (req, res) => {
         },
         {
             $lookup: {
-                from: "users", 
-                localField: "user", 
-                foreignField: "_id", 
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
                 as: "user",
                 pipeline: [
                     {
                         $project: {
                             username: 1,
                             fullName: 1,
-                            pfp: 1 
+                            pfp: 1
                         }
                     }
                 ]
@@ -121,14 +121,14 @@ const getMostLikedTweets = asyncHandler(async (req, res) => {
         },
         {
             $project: {
-                title: 1, 
-                content: 1, 
-                media: 1, 
-                tags: 1, 
-                views: 1, 
+                title: 1,
+                content: 1,
+                media: 1,
+                tags: 1,
+                views: 1,
                 likeCount: { $size: "$likes" },
-                user: 1, 
-                createdAt: 1 
+                user: 1,
+                createdAt: 1
             }
         }
     ]);
@@ -146,7 +146,7 @@ const getMostLikedTweets = asyncHandler(async (req, res) => {
             {
                 tweets,
                 hasMore,
-                nextCursor: nextCursor?.toString() 
+                nextCursor: nextCursor?.toString()
             },
             "Most liked tweets fetched successfully"
         )
@@ -168,16 +168,16 @@ const getUserLikedTweets = asyncHandler(async (req, res) => {
         },
         {
             $lookup: {
-                from: "users", 
-                localField: "user", 
-                foreignField: "_id", 
-                as: "user", 
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user",
                 pipeline: [
                     {
                         $project: {
                             username: 1,
                             fullName: 1,
-                            pfp: 1 
+                            pfp: 1
                         }
                     }
                 ]
@@ -194,14 +194,14 @@ const getUserLikedTweets = asyncHandler(async (req, res) => {
         },
         {
             $project: {
-                title: 1, 
-                content: 1, 
-                media: 1, 
-                tags: 1, 
-                views: 1, 
-                likeCount: { $size: "$likes" }, 
-                user: 1, 
-                createdAt: 1 
+                title: 1,
+                content: 1,
+                media: 1,
+                tags: 1,
+                views: 1,
+                likeCount: { $size: "$likes" },
+                user: 1,
+                createdAt: 1
             }
         }
     ]);
@@ -219,7 +219,7 @@ const getUserLikedTweets = asyncHandler(async (req, res) => {
             {
                 tweets,
                 hasMore,
-                nextCursor: nextCursor?.toString() 
+                nextCursor: nextCursor?.toString()
             },
             "User's liked tweets fetched successfully"
         )
@@ -231,11 +231,11 @@ const getTweetLikers = asyncHandler(async (req, res) => {
     const { limit = 20, cursor } = req.query;
 
     const tweet = await Tweet.findById(tweetId).populate({
-        path: 'likes', 
-        select: 'username fullName pfp', 
+        path: 'likes',
+        select: 'username fullName pfp',
         options: {
-            limit: parseInt(limit) + 1, 
-            ...(cursor && { skip: parseInt(cursor) }) 
+            limit: parseInt(limit) + 1,
+            ...(cursor && { skip: parseInt(cursor) })
         }
     });
 
@@ -261,11 +261,11 @@ const getTweetLikers = asyncHandler(async (req, res) => {
     );
 });
 
-export {
-    likeTweet, 
-    getLikeCount, 
-    checkUserLiked, 
-    getMostLikedTweets, 
-    getUserLikedTweets, 
-    getTweetLikers 
-};
+export    {
+    likeTweet,
+    getLikeCount,
+    checkUserLiked,
+    getMostLikedTweets,
+    getUserLikedTweets,
+    getTweetLikers
+ };
