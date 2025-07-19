@@ -7,7 +7,7 @@ import cookieParser from "cookie-parser"
 const app = express();
 
 app.use(cors({
-    origin: ["http://localhost:3000", "http://localhost:5173", "airly.inhttps://www.airly.in/"],
+    origin: ["http://localhost:3000", "http://localhost:5173", "https://www.airly.in/"],
     credentials: true
 }));
 
