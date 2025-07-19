@@ -6,8 +6,8 @@ import { loginSuccess } from '../../features/auth/authSlice';
 import { userService } from '../../services/userService';
 
 export const Login: React.FC = () => {
-  const [emailOrUsername, setEmailOrUsername] = useState('test12');
-  const [password, setPassword] = useState('test1tes');
+  const [emailOrUsername, setEmailOrUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
@@ -41,8 +41,11 @@ export const Login: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 w-full max-w-md shadow-2xl">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-r from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-2xl">C</span>
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-xl">A</span>
+            </div>
+            <span className="text-white font-bold text-2xl">Airly</span>
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
           <p className="text-white/70">Continue your creative journey</p>

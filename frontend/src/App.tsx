@@ -47,6 +47,7 @@ function App() {
       />
       <Router>
         <Routes>
+          {/* Public Routes */}
           <Route 
             path="/login" 
             element={
@@ -68,6 +69,7 @@ function App() {
             } 
           />
 
+          {/* Protected Routes */}
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
@@ -117,6 +119,7 @@ function App() {
             <Route path="post/:id" element={<PostDetailPageWrapper />} />
           </Route>
 
+          {/* Fallback Route */}
           <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
         </Routes>
       </Router>
