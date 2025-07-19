@@ -30,6 +30,7 @@ for some real tasks which are used in literally every file, i have made a utils 
 i added a new thing i learned while making htis project which was databse indexing so included it too although very much of it can actually slow up stuff. its fast for some stuff like strategic indexing for quiries.
 
 deployed backend on Railway cause it gives unlimited repos to be deployed on my prized account for which i'll pay and ditched Render cause it took money for each project repo demn
+
 ---
 **Frontend** -> i used React with TypeScript for the frontend and build tool Vite  because i wanted to learn TypeScript and again it provides better developer experience! 
 
@@ -49,7 +50,7 @@ Full-stack development, modern JS/TS, React ecosystem, API integration,
 
 Deploying on a various places (cause i tried AWS Elastic Beanstalk(expensive/), DigitalOcean(takes money for each project/), Render(per-service billing/), Railway) but then finally took Railway as the main home for my backend!
 
-- **Challenges i somehow overcame** - CORS, file uploads, deploying(real mind bending!)
+**Challenges i somehow overcame** - CORS, file uploads, deploying(real mind bending!)
 
 
 ##  **Some cool Backend things i enjoyed**
