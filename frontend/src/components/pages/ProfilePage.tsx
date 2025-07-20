@@ -357,14 +357,10 @@ export const ProfilePage: React.FC = () => {
             </div>
             
             <p className="text-gray-700 mb-6 leading-relaxed">
-              {profile.bio || "Creative enthusiast sharing moments and inspirations. Always exploring new perspectives and connecting with amazing people around the world."}
+              {profile.bio}
             </p>
             
             <div className="flex items-center space-x-6 text-sm text-gray-600">
-              <div className="flex items-center space-x-1">
-                <MapPin className="w-4 h-4" />
-                <span>San Francisco, CA</span>
-              </div>
               <div className="flex items-center space-x-1">
                 <Calendar className="w-4 h-4" />
                 <span>Joined {profile.joinedDate}</span>
