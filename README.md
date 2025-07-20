@@ -12,6 +12,7 @@ this kinda project enabled me to explore aggeregation piplines and other intermi
 
 also i made this as a project for athena award, a you ship we ship (YSWS) in Hack Club.
 
+[![Athena Award Badge](https://img.shields.io/endpoint?url=https%3A%2F%2Faward.athena.hackclub.com%2Fapi%2Fbadge)](https://award.athena.hackclub.com?utm_source=readme)
 
 # Tech Stack - (Why each technology/approach was chosen)
 
