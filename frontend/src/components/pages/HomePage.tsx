@@ -102,7 +102,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
             Discover Amazing Creations
           </h1>
-          <p className="text-sm sm:text-base text-gray-600">Explore ideas from people just like you.</p>
+          <p className="text-sm sm:text-base text-gray-600">Explore the latest works from our creative community</p>
         </div>
         
         {/* Search Bar */}
@@ -112,7 +112,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for something cool..."
+            placeholder="Search for inspiration, artists, or tags..."
             className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border border-gray-200 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 bg-gray-50/50 backdrop-blur-sm transition-all duration-200 text-sm sm:text-base"
           />
         </div>

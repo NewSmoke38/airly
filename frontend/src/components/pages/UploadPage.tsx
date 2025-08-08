@@ -31,8 +31,7 @@ export const UploadPage: React.FC = () => {
   const popularTags = [
     'photography', 'art', 'nature', 'travel', 'food', 'lifestyle', 'fashion', 
     'technology', 'design', 'architecture', 'music', 'fitness', 'beauty', 
-    'inspiration', 'creativity', 'minimalism', 'vintage', 'modern', 'abstract',
-    'Digital Art', 'Architecture'
+    'inspiration', 'creativity', 'minimalism', 'vintage', 'modern', 'abstract'
   ];
 
   const getTagSuggestions = () => {

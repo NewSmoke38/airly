@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from './store';
 import { initializeAuth } from './features/auth/authSlice';
@@ -37,8 +37,9 @@ function App() {
       <Toaster 
         position="top-center"
         reverseOrder={false}
+        gutter={8}
         toastOptions={{
-          duration: 2000,
+          duration: 3000,
           style: {
             background: '#363636',
             color: '#fff',

@@ -134,7 +134,7 @@ const getPopularPosts = asyncHandler(async (req, res) => {
             {
                 $addFields: {
                     likeCount: { $size: { $ifNull: ["$likes", []] } },
-                    comments: { $ifNull: ["$commentCount", 0] },
+                    commentCount: { $ifNull: ["$commentCount", 0] },
                     viewsCount: { $ifNull: ["$views", 0] }
                 }
             },
@@ -143,7 +143,7 @@ const getPopularPosts = asyncHandler(async (req, res) => {
                     popularityScore: {
                         $add: [
                             { $multiply: ["$likeCount", 2] },
-                            "$comments",
+                            "$commentCount",
                             { $multiply: ["$viewsCount", 0.5] }
                         ]
                     }
@@ -209,7 +209,7 @@ const getCommonFeedPipeline = () => {
                 views: { $ifNull: ["$views", 0] },
                 likes: { $size: { $ifNull: ["$likes", []] } },
                 bookmarkCount: { $size: { $ifNull: ["$bookmarkedBy", []] } },
-                comments: { $ifNull: ["$commentCount", 0] },
+                commentCount: { $ifNull: ["$commentCount", 0] },
                 likesArray: { $ifNull: ["$likes", []] },
                 bookmarksArray: { $ifNull: ["$bookmarkedBy", []] },
                 user: 1,

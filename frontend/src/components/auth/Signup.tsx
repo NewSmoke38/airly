@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { loginSuccess } from '../../features/auth/authSlice';
 import { userService } from '../../services/userService';
+import toast from 'react-hot-toast';
 
 interface ValidationErrors {
   fullName?: string;
@@ -203,11 +204,23 @@ export const Signup: React.FC = () => {
         pfp: pfp!,
       });
 
+      toast.success('Signed up successfully!');
+      
+      const loginResponse = await userService.login({ email: email.toLowerCase().trim(), password: password });
+      
+      toast('Logging you in...');
+
       dispatch(loginSuccess({
-        user: response.user,
-        accessToken: response.accessToken,
-        refreshToken: response.refreshToken
+        user: loginResponse.user,
+        accessToken: loginResponse.accessToken,
+        refreshToken: loginResponse.refreshToken
       }));
+
+      setTimeout(() => {
+        toast.success('Logged in!');
+        navigate('/dashboard');
+    }, 1000);
+
     } catch (error: any) {
       setError(error.response?.data?.message || 'Signup failed. Please try again.');
     } finally {

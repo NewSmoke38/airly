@@ -28,6 +28,7 @@ router.route("/register").post(
 router.route("/login").post(loginUser)
 router.route("/logout").post(verifyJWT, logoutUser)
 
+// Social features
 router.post("/:userId/follow", verifyJWT, toggleFollow)
 router.post("/:userId/block", verifyJWT, toggleBlock)
 router.get("/:userId/relationship", verifyJWT, getUserRelationship)
