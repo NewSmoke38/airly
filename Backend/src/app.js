@@ -6,16 +6,10 @@ import cookieParser from "cookie-parser"
 
 const app = express();
 
-const allowedOrigins = process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',')
-    : '*';
 
 app.use(cors({
-    origin: allowedOrigins,
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204
+  origin: ["http://localhost:3000", "http://localhost:5173", "https://www.airly.in", "https://www.airly.in/", "https://airly.in"],
+  credentials: true
 }));
 
 app.use(express.json({limit: "16kb"}))    
