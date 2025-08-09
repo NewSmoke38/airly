@@ -4,14 +4,15 @@ import { DB_NAME } from "../constants.js";
 // try catch method is always best
 const connectDB = async () => {
     try {
-        const connectionInstance = await mongoose.connect
-        (`${process.env.MONGODB_URI}/${"Vibely"}`)
-        console.log(`\nMongoDB connected yayyyy !! 
-            ${connectionInstance.connection.host}`);
-        
+        const connectionInstance = await mongoose.connect(
+            `${process.env.MONGODB_URI}/${DB_NAME}`
+        );
+        console.log(`\nMongoDB connected yayyyy !! ${connectionInstance.connection.host}`);
+        return connectionInstance;
     } catch (error) {
         console.log("MONGODB connection FAILED", error);
-        process.exit(1)
+        // Don't exit the process, let the calling function handle it
+        throw error;
     }
 }; 
 
