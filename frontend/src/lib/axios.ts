@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = 'http://www.airly.in';
+const baseURL = 'https://airly-backend-production.up.railway.app';
 
 const axiosInstance = axios.create({
   baseURL,
