@@ -25,7 +25,7 @@ const userSchema = new Schema(
     password: {
         type: String,
         required: function() {
-            return !this.googleId; // Password required only if not Google OAuth user
+            return !this.googleId; // Password required only if not a Google OAuth user
         },
         validate: function(value) {
             // Skip password validation if this is a Google OAuth user
@@ -37,7 +37,7 @@ const userSchema = new Schema(
     googleId: {
         type: String,
         unique: true,
-        sparse: true // Allows multiple null values
+        sparse: true 
     },
     fullName: {
       type: String,

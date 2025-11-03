@@ -317,19 +317,16 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
    console.log('Google Login Request:', { email, fullName, picture, googleId });
 
    if (!email || !fullName || !googleId) {
-      console.error('Missing required fields');
       throw new ApiError(400, "Email, fullName, and googleId are required");
    }
 
-   // Check if user exists with this email or googleId
+   
    let user = await User.findOne({
       $or: [{ email: email.toLowerCase() }, { googleId }]
    });
    
-   console.log('Existing user found:', user ? 'Yes' : 'No');
 
    if (user) {
-      // User exists, update googleId if not set and picture if different
       if (!user.googleId) {
          user.googleId = googleId;
       }
@@ -338,19 +335,15 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
       }
       await user.save({ validateBeforeSave: false });
    } else {
-      // Create new user with Google OAuth
-      // Generate username from email (before @)
       const baseUsername = email.split('@')[0].toLowerCase();
       let username = baseUsername;
       let counter = 1;
 
-      // Ensure username is unique
       while (await User.findOne({ username })) {
          username = `${baseUsername}${counter}`;
          counter++;
       }
 
-      // Create user object without password field for Google OAuth users
       const userData = {
          email: email.toLowerCase(),
          fullName,
@@ -361,10 +354,8 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
       };
       
       user = await User.create(userData);
-      console.log('New Google user created:', user.username);
    }
 
-   // Generate tokens
    const { refreshToken, accessToken } = await generateAccessAndRefreshTokens(user._id);
 
    const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
