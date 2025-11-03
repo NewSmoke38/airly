@@ -170,30 +170,35 @@ export const Login: React.FC = () => {
           <button
             onClick={() => handleGoogleLogin()}
             disabled={isLoading || isGoogleLoading}
-            className="mt-4 w-full flex items-center justify-center gap-3 bg-white text-gray-700 py-3 px-4 rounded-xl font-semibold hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] shadow-lg"
+            className="mt-4 w-full flex items-center justify-center gap-3 bg-white/10 backdrop-blur-sm border border-white/20 text-white py-3.5 px-4 rounded-xl font-medium hover:bg-white/15 hover:border-white/30 focus:outline-none focus:ring-2 focus:ring-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg disabled:transform-none"
           >
             {isGoogleLoading ? (
-              <span>Signing in...</span>
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span>Signing in...</span>
+              </div>
             ) : (
               <>
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.24-5.92 2.24-.34 0-.68-.03-1-.08a8.79 8.79 0 0 0 8.64 6.08c5.52 0 9.21-4.57 9.21-9.25z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.46-2.68c-.98.66-2.23 1.06-3.82 1.06-2.94 0-5.43-1.99-6.32-4.66H2.18v2.76C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M5.68 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.15H2.18C1.43 8.48 1 10.16 1 12s.43 3.52 1.18 4.85l3.5-2.76z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.15l3.5 2.76c.89-2.67 3.38-4.53 6.32-4.53z"
-                  />
-                </svg>
+                <div className="w-5 h-5 flex-shrink-0">
+                  <svg viewBox="0 0 24 24" className="w-full h-full">
+                    <path
+                      fill="#4285F4"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.78 3.11v3.5h4.49c2.63-2.42 4.15-5.99 4.15-10.62z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c3.24 0 5.95-1.08 7.93-2.91l-3.5-2.7c-1.08.72-2.45 1.16-4.43 1.16-3.57 0-6.58-2.41-7.66-5.64H2.18v2.78C4.1 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.84 14.09c-.24-.72-.38-1.49-.38-2.28s.14-1.56.38-2.28V6.75H2.18C1.43 8.48 1 10.22 1 12s.43 3.52 1.18 5.25l3.66-3.16z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 5.38c2.03 0 3.85.7 5.28 2.05l3.94-3.94C17.95 2.09 15.24 1 12 1 7.7 1 4.1 3.47 2.18 6.75l3.66 2.78c1.08-3.23 4.09-5.64 7.66-5.64z"
+                    />
+                  </svg>
+                </div>
                 <span>Continue with Google</span>
               </>
             )}
