@@ -3,7 +3,7 @@ import axios from 'axios';
 let Prod = true;
 
 const ProdBaseURL = 'https://vibely-3q1i.onrender.com/api/v1';
-const LocalBaseURL = 'https://vibely-3q1i.onrender.com/api/v1';
+const LocalBaseURL = 'http://localhost:8000/api/v1';
 
 const baseURL = Prod ? ProdBaseURL : LocalBaseURL;
 

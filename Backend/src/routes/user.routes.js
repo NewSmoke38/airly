@@ -7,6 +7,7 @@ import {
     toggleBlock,
     getUserRelationship,
     updateUserProfile,
+    loginWithGoogle,
 } from "../controllers/user.controller.js";
 
 import { uploadPfp } from "../middlewares/multer.middleware.js";
@@ -26,6 +27,7 @@ router.route("/register").post(
 
 
 router.route("/login").post(loginUser)
+router.route("/google-login").post(loginWithGoogle)
 router.route("/logout").post(verifyJWT, logoutUser)
 
 // Social features

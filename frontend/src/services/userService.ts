@@ -74,6 +74,13 @@ export interface UpdateProfileData {
   pfp?: File;
 }
 
+interface GoogleLoginData {
+  email: string;
+  fullName: string;
+  picture: string;
+  googleId: string;
+}
+
 const API_BASE_URL = '/users';
 
 export const userService = {
@@ -151,6 +158,11 @@ export const userService = {
     params.append('query', query);
 
     const response = await axiosInstance.get<ApiResponse<User[]>>(`${API_BASE_URL}/search`, { params });
+    return response.data.data;
+  },
+
+  async loginWithGoogle(data: GoogleLoginData): Promise<AuthResponse> {
+    const response = await axiosInstance.post<ApiResponse<AuthResponse>>('users/google-login', data);
     return response.data.data;
   },
 }; 

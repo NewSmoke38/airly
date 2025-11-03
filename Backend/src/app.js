@@ -8,7 +8,7 @@ const app = express();
 
 
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:5173", "https://www.airly.in", "https://www.airly.in/", "https://airly.in"],
+  origin: ["http://localhost:3000", "http://localhost:5174/", "https://www.airly.in", "https://www.airly.in/", "https://airly.in", "http://localhost:5174", "http://localhost:5173"],
   credentials: true
 }));
 
