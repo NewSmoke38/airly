@@ -24,9 +24,20 @@ const userSchema = new Schema(
     },
     password: {
         type: String,
-        required: [true, 'Password is required'],
-        minlength: 6,
-        maxlength: 20
+        required: function() {
+            return !this.googleId; // Password required only if not a Google OAuth user
+        },
+        validate: function(value) {
+            // Skip password validation if this is a Google OAuth user
+            if (this.googleId) return true;
+            // Only validate min/max length for non-Google users
+            return !value || (value.length >= 6 && value.length <= 20);
+        }
+    },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true 
     },
     fullName: {
       type: String,
@@ -95,6 +106,7 @@ const userSchema = new Schema(
 // using bcrypt for hashing passwords
 userSchema.pre("save", async function (next) {        // async is for the time it takes, bro its cryptography hehe
   if (!this.isModified("password")) return next();     // yaha we checked for negative
+  if (!this.password) return next(); // Skip hashing if no password (Google OAuth users)
 
   this.password = await bcrypt.hash(this.password, 10);
   next();
@@ -107,6 +119,10 @@ userSchema.pre("save", async function (next) {        // async is for the time i
 // this one it to check if the password is correct
 
 userSchema.methods.isPasswordCorrect = async function (password) {
+  // If user doesn't have a password (Google OAuth user), this shouldn't be called
+  if (!this.password) {
+    return false;
+  }
   return await bcrypt.compare(password, this.password)
 }
 

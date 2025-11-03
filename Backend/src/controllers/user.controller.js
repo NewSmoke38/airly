@@ -311,6 +311,73 @@ const getUserRelationship = asyncHandler(async (req, res) => {
    );
 });
 
+const loginWithGoogle = asyncHandler(async (req, res) => {
+   const { email, fullName, picture, googleId } = req.body;
+   
+   console.log('Google Login Request:', { email, fullName, picture, googleId });
+
+   if (!email || !fullName || !googleId) {
+      throw new ApiError(400, "Email, fullName, and googleId are required");
+   }
+
+   
+   let user = await User.findOne({
+      $or: [{ email: email.toLowerCase() }, { googleId }]
+   });
+   
+
+   if (user) {
+      if (!user.googleId) {
+         user.googleId = googleId;
+      }
+      if (picture && user.pfp !== picture) {
+         user.pfp = picture;
+      }
+      await user.save({ validateBeforeSave: false });
+   } else {
+      const baseUsername = email.split('@')[0].toLowerCase();
+      let username = baseUsername;
+      let counter = 1;
+
+      while (await User.findOne({ username })) {
+         username = `${baseUsername}${counter}`;
+         counter++;
+      }
+
+      const userData = {
+         email: email.toLowerCase(),
+         fullName,
+         username,
+         pfp: picture || 'https://res.cloudinary.com/demo/image/upload/w_400,h_400,c_crop,g_face,r_max/w_200/lady.jpg', // Default profile picture
+         googleId,
+         role: DEFAULT_ROLE
+      };
+      
+      user = await User.create(userData);
+   }
+
+   const { refreshToken, accessToken } = await generateAccessAndRefreshTokens(user._id);
+
+   const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+
+   const options = {
+      httpOnly: true,
+      secure: true
+   };
+
+   return res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .json(
+         new ApiResponse(
+            200,
+            { user: loggedInUser, accessToken, refreshToken },
+            "User logged in with Google successfully"
+         )
+      );
+});
+
 
 export {
    registerUser,
@@ -320,5 +387,6 @@ export {
    toggleBlock,
    getUserRelationship,
    updateUserProfile,
+   loginWithGoogle,
 };
 
