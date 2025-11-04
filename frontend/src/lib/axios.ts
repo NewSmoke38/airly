@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-let Prod = false;
+let Prod = true;
 
 const ProdBaseURL = 'https://vibely-3q1i.onrender.com/api/v1';
 const LocalBaseURL = 'https://vibely-3q1i.onrender.com/api/v1';
