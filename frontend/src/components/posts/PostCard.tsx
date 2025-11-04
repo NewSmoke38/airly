@@ -6,6 +6,7 @@ import { Post } from '../../types';
 import { tweetService } from '../../services/tweetService';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
+import { SignUpPromptModal } from '../modals/SignUpPromptModal';
 
 interface PostCardProps {
   post: Post;
@@ -23,6 +24,8 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onEdit, onDelete, onCl
   const [likeCount, setLikeCount] = useState(post.likes || 0);
   const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked || false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showSignUpPrompt, setShowSignUpPrompt] = useState(false);
+  const [signUpAction, setSignUpAction] = useState<'like' | 'comment'>('like');
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
@@ -64,6 +67,13 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onEdit, onDelete, onCl
 
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    if (!currentUser) {
+      setSignUpAction('like');
+      setShowSignUpPrompt(true);
+      return;
+    }
+
     if (!postId) {
       console.error('Post ID is missing');
       return;
@@ -333,6 +343,12 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onEdit, onDelete, onCl
           </div>
         </div>
       </div>
+      
+      <SignUpPromptModal
+        isOpen={showSignUpPrompt}
+        onClose={() => setShowSignUpPrompt(false)}
+        action={signUpAction}
+      />
     </div>
   );
 };

@@ -194,23 +194,23 @@ class TweetService {
     return response.data;
   }
 
-  async getComments(tweetId: string, cursor?: string, batch = 20): Promise<ApiResponse<{ comments: any[]; hasMore: boolean; nextCursor?: string }>> {
+  async getComments(tweetId: string, cursor?: string, batch = 50): Promise<ApiResponse<{ comments: any[]; hasMore: boolean; nextCursor?: string }>> {
     const params = new URLSearchParams();
     if (cursor) params.append('cursor', cursor);
     params.append('batch', batch.toString());
 
     const response = await axios.get(`/tweets/${tweetId}/comments?${params.toString()}`);
-    return response.data;
+    return response.data.data || response.data;
   }
 
   async createComment(tweetId: string, content: string): Promise<ApiResponse<any>> {
     const response = await axios.post(`/tweets/${tweetId}/comments`, { content });
-    return response.data;
+    return response.data.data || response.data;
   }
 
   async getCommentCount(tweetId: string): Promise<ApiResponse<{ count: number }>> {
     const response = await axios.get(`/tweets/${tweetId}/comments/count`);
-    return response.data;
+    return response.data.data || response.data;
   }
 
   async editComment(commentId: string, content: string): Promise<ApiResponse<any>> {

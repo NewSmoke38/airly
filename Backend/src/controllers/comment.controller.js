@@ -105,7 +105,7 @@ const getCommentsByTweet = asyncHandler(async (req, res) => {
                 ]
             }
         },
-        { $unwind: "$user" },
+        { $unwind: { path: "$user", preserveNullAndEmptyArrays: false } },
         {
             $lookup: {
                 from: "users",
@@ -163,13 +163,18 @@ const getCommentsByTweet = asyncHandler(async (req, res) => {
 const getCommentCount = asyncHandler(async (req, res) => {
     const { tweetId } = req.params;
 
-const count = await Comment.countDocuments({ 
-        tweet: tweetId,
+    const tweet = await Tweet.findById(tweetId);
+    if (!tweet) {
+        throw new ApiError(404, "Tweet not found");
+    }
+
+    const count = await Comment.countDocuments({ 
+        tweet: new mongoose.Types.ObjectId(tweetId),
         parentComment: null 
     });
 
     return res.status(200).json(
-    new ApiResponse(200, { count }, "Comment count fetched successfully")
+        new ApiResponse(200, { count }, "Comment count fetched successfully")
     );
 });
 

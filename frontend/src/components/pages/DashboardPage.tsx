@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { HomePage } from './HomePage';
@@ -41,6 +41,7 @@ export const DashboardPage: React.FC = () => {
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [deletingPost, setDeletingPost] = useState<Post | null>(null);
   const [isSubmittingDelete, setIsSubmittingDelete] = useState(false);
+  const selectedPostRef = useRef<Post | null>(null);
 
 
   const fetchPosts = async (tag?: string, sort?: string) => {
@@ -69,20 +70,68 @@ export const DashboardPage: React.FC = () => {
     fetchPosts(selectedTag || undefined, sortBy);
   }, [selectedTag, sortBy]);
 
+  // Update ref whenever selectedPost changes
   useEffect(() => {
-    
+    selectedPostRef.current = selectedPost;
+  }, [selectedPost]);
+
+  useEffect(() => {
     if (!isMobile) {
-      
-      if (postId && posts.length > 0) {
-        const post = posts.find(p => (p._id || p.id) === postId);
-        
-        if (post) {
-          setSelectedPost(post);
-          setCurrentPostIndex(posts.indexOf(post));
-        } else {
-          navigate('/dashboard', { replace: true });
+      if (postId) {
+        // If we already have this post selected, keep it (prevents flicker)
+        const currentSelected = selectedPostRef.current;
+        if (currentSelected && (currentSelected._id === postId || currentSelected.id === postId)) {
+          // Post already selected, just ensure index is correct if in posts list
+          if (posts.length > 0) {
+            const index = posts.findIndex(p => (p._id || p.id) === postId);
+            if (index >= 0 && currentPostIndex !== index) {
+              setCurrentPostIndex(index);
+            }
+          }
+          return; // Don't do anything else, modal should stay open
         }
-      } else if (!postId) {
+        
+        // Wait for posts to load before trying to find the post
+        if (posts.length > 0) {
+          const post = posts.find(p => (p._id || p.id) === postId);
+          
+          if (post) {
+            setSelectedPost(post);
+            setCurrentPostIndex(posts.indexOf(post));
+          } else {
+            // Post not found in current list - try to fetch it directly
+            const fetchPost = async () => {
+              try {
+                const response = await tweetService.getTweet(postId);
+                if (response.data) {
+                  setSelectedPost(response.data as unknown as Post);
+                  setCurrentPostIndex(-1); // Not in the current posts list
+                }
+              } catch (error) {
+                console.error('Failed to fetch post:', error);
+                // Don't navigate away immediately - let user close manually
+              }
+            };
+            fetchPost();
+          }
+        } else {
+          // Posts are still loading, but we have a postId
+          // Fetch the post directly so modal can open immediately
+          const fetchPost = async () => {
+            try {
+              const response = await tweetService.getTweet(postId);
+              if (response.data) {
+                setSelectedPost(response.data as unknown as Post);
+                setCurrentPostIndex(-1);
+              }
+            } catch (error) {
+              console.error('Failed to fetch post:', error);
+            }
+          };
+          fetchPost();
+        }
+      } else {
+        // No postId - clear selection
         setSelectedPost(null);
         setCurrentPostIndex(-1);
       }
@@ -91,7 +140,7 @@ export const DashboardPage: React.FC = () => {
         navigate(`/post/${postId}`, { replace: true });
       }
     }
-  }, [postId, navigate, posts, isMobile]);
+  }, [postId, navigate, posts, isMobile, currentPostIndex]);
 
   const handlePostClick = (post: Post) => {
     const postId = post._id || post.id;
@@ -100,6 +149,9 @@ export const DashboardPage: React.FC = () => {
       if (isMobile) {
         navigate(`/post/${postId}`, { state: { post } });
       } else {
+        // Set the post immediately before navigating to avoid flicker
+        setSelectedPost(post);
+        setCurrentPostIndex(posts.findIndex(p => (p._id || p.id) === postId));
         navigate(`/dashboard/post/${postId}`, { replace: false });
       }
     } 
@@ -208,8 +260,9 @@ export const DashboardPage: React.FC = () => {
       />
       
       {/* Only show modal on desktop */}
-      {!isMobile && selectedPost && (
+      {!isMobile && selectedPost && postId && (
         <PostDetailModal
+          key={postId} // Force remount when postId changes
           post={selectedPost}
           onClose={handleCloseModal}
           onPrevious={currentPostIndex > 0 ? handlePreviousPost : undefined}
