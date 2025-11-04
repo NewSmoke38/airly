@@ -4,6 +4,9 @@ import { Heart, MessageCircle, Eye } from 'lucide-react';
 import { Post } from '../../types';
 import { feedService } from '../../services/feedService';
 import { tweetService } from '../../services/tweetService';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
+import { SignUpPromptModal } from '../modals/SignUpPromptModal';
 
 interface PostDetailPageProps {
   post: Post;
@@ -14,6 +17,9 @@ export const PostDetailPage: React.FC<PostDetailPageProps> = ({ post, onEditPost
   const navigate = useNavigate();
   const [relatedPosts, setRelatedPosts] = useState<Post[]>([]);
   const [isLoadingRelated, setIsLoadingRelated] = useState(false);
+  const [showSignUpPrompt, setShowSignUpPrompt] = useState(false);
+  
+  const currentUser = useSelector((state: RootState) => state.auth.user);
 
   useEffect(() => {
     const fetchRelatedPosts = async () => {
@@ -67,6 +73,11 @@ export const PostDetailPage: React.FC<PostDetailPageProps> = ({ post, onEditPost
 
   const handleRelatedPostLike = async (e: React.MouseEvent, relatedPost: Post) => {
     e.stopPropagation(); // Prevent navigation when clicking like
+    
+    if (!currentUser) {
+      setShowSignUpPrompt(true);
+      return;
+    }
     
     const postId = relatedPost._id || relatedPost.id;
     if (!postId) return;
@@ -250,6 +261,12 @@ export const PostDetailPage: React.FC<PostDetailPageProps> = ({ post, onEditPost
           </div>
         )}
       </div>
+      
+      <SignUpPromptModal
+        isOpen={showSignUpPrompt}
+        onClose={() => setShowSignUpPrompt(false)}
+        action="like"
+      />
     </div>
   );
 }; 

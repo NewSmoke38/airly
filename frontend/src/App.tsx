@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from './store';
+import { useDispatch } from 'react-redux';
 import { initializeAuth } from './features/auth/authSlice';
 import { Toaster } from 'react-hot-toast';
 
@@ -9,7 +8,6 @@ import { Login } from './components/auth/Login';
 import { Signup } from './components/auth/Signup';
 
 import { Layout } from './components/layout/Layout';
-import { ProtectedRoute } from './components/ProtectedRoute';
 import { AdminProtectedRoute } from './components/AdminProtectedRoute';
 
 import { DashboardPage } from './components/pages/DashboardPage';
@@ -22,10 +20,9 @@ import { AdminDashboard } from './components/pages/AdminDashboard';
 import { FavoritesPageWrapper } from './components/pages/FavoritesPageWrapper';
 import { CollectionsPageWrapper } from './components/pages/CollectionsPageWrapper';
 
-import { TrendingUp, Heart, Bookmark, Users, Settings } from 'lucide-react';
+import { TrendingUp, Users, Settings } from 'lucide-react';
 
 function App() {
-  const { user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -52,26 +49,22 @@ function App() {
           <Route 
             path="/login" 
             element={
-              user ? <Navigate to="/dashboard" replace /> : (
-                <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-                  <Login />
-                </div>
-              )
+              <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+                <Login />
+              </div>
             } 
           />
           <Route 
             path="/signup" 
             element={
-              user ? <Navigate to="/dashboard" replace /> : (
-                <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-                  <Signup />
-                </div>
-              )
+              <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+                <Signup />
+              </div>
             } 
           />
 
           {/* Protected Routes */}
-          <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+          <Route path="/" element={<Layout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="dashboard/post/:postId" element={<DashboardPage />} />
@@ -121,7 +114,7 @@ function App() {
           </Route>
 
           {/* Fallback Route */}
-          <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Router>
     </>

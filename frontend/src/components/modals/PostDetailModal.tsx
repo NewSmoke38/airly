@@ -5,6 +5,7 @@ import { Post } from '../../types';
 import { tweetService } from '../../services/tweetService';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
+import { SignUpPromptModal } from './SignUpPromptModal';
 
 interface PostDetailModalProps {
   post: Post;
@@ -56,6 +57,8 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments || 0);
+  const [showSignUpPrompt, setShowSignUpPrompt] = useState(false);
+  const [signUpAction, setSignUpAction] = useState<'like' | 'comment'>('like');
   const modalRef = useRef<HTMLDivElement>(null);
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
@@ -68,7 +71,7 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
     if (postId) {
       fetchComments();
     }
-  }, [postId]);
+  }, [postId, currentUser]);
 
   const fetchComments = async () => {
     if (!postId) return;
@@ -77,12 +80,47 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
       setIsLoadingComments(true);
       
       const [commentsResponse, countResponse] = await Promise.all([
-        tweetService.getComments(postId),
-        tweetService.getCommentCount(postId)
+        tweetService.getComments(postId).catch(err => {
+          console.error('Failed to fetch comments:', err.response?.data || err.message);
+          return { comments: [] };
+        }),
+        tweetService.getCommentCount(postId).catch(err => {
+          console.error('Failed to fetch comment count:', err.response?.data || err.message);
+          return { count: 0 };
+        })
       ]);
       
-      setComments(commentsResponse.data.comments || []);
-      const actualCommentCount = countResponse.data.count;
+      // Service returns response.data.data which unwraps to { comments: [...], hasMore, nextCursor } or { count: number }
+      // Handle both wrapped and unwrapped response structures
+      let commentsData = [];
+      if (commentsResponse) {
+        if (Array.isArray(commentsResponse)) {
+          // Direct array response
+          commentsData = commentsResponse;
+        } else if (commentsResponse.comments) {
+          // Unwrapped structure { comments: [...], hasMore, nextCursor }
+          commentsData = commentsResponse.comments;
+        } else if (commentsResponse.data?.comments) {
+          // Double-wrapped structure
+          commentsData = commentsResponse.data.comments;
+        }
+      }
+      
+      let countData = 0;
+      if (countResponse) {
+        if (typeof countResponse === 'number') {
+          countData = countResponse;
+        } else if (countResponse.count !== undefined) {
+          countData = countResponse.count;
+        } else if (countResponse.data?.count !== undefined) {
+          countData = countResponse.data.count;
+        }
+      }
+      
+      // Fallback: use comments array length if count is 0 but we have comments
+      const actualCommentCount = countData > 0 ? countData : (commentsData.length || 0);
+      
+      setComments(Array.isArray(commentsData) ? commentsData : []);
       setCommentCount(actualCommentCount);
       
       if (onPostUpdate && actualCommentCount !== post.comments) {
@@ -94,13 +132,24 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
     } catch (error) {
       console.error('Failed to fetch comments:', error);
       setComments([]);
+      setCommentCount(0);
     } finally {
       setIsLoadingComments(false);
     }
   };
 
   useEffect(() => {
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (showSignUpPrompt) return; // Don't handle keys if sign-up modal is open
+      
       if (event.key === 'Escape') {
         onClose();
       } else if (event.key === 'ArrowLeft' && hasPrevious && onPrevious) {
@@ -112,16 +161,13 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, onPrevious, onNext, hasPrevious, hasNext]);
-
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, []);
+  }, [onClose, onPrevious, onNext, hasPrevious, hasNext, showSignUpPrompt]);
 
   const handleBackdropClick = (e: React.MouseEvent) => {
+    // Don't close if clicking on SignUpPromptModal or any child
+    if ((e.target as HTMLElement).closest('[data-signup-modal]')) {
+      return;
+    }
     if (e.target === e.currentTarget) {
       onClose();
     }
@@ -135,6 +181,12 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
   };
 
   const handleLike = async () => {
+    if (!currentUser) {
+      setSignUpAction('like');
+      setShowSignUpPrompt(true);
+      return;
+    }
+
     const postId = post._id || post.id;
     if (!postId) {
       console.error('Post ID is missing');
@@ -219,6 +271,13 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!currentUser) {
+      setSignUpAction('comment');
+      setShowSignUpPrompt(true);
+      return;
+    }
+
     if (newComment.trim()) {
       const postId = post._id || post.id;
       if (!postId) {
@@ -230,11 +289,14 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
         const response = await tweetService.createComment(postId, newComment.trim());
         setNewComment('');
         
-        if (response.data) {
-          setComments(prev => [response.data, ...prev]);
+        // Service already unwraps the response, so response should be the comment object
+        // But handle both cases in case structure is different
+        const newCommentData = response.data || response;
+        if (newCommentData) {
+          setComments(prev => [newCommentData, ...prev]);
           try {
             const countResponse = await tweetService.getCommentCount(postId);
-            const actualCommentCount = countResponse.data.count;
+            const actualCommentCount = countResponse.count || countResponse.data?.count || 0;
             setCommentCount(actualCommentCount);
             
             if (onPostUpdate) {
@@ -268,7 +330,10 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
       className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={handleBackdropClick}
     >
-      <div className="relative max-w-6xl w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex">
+      <div 
+        className="relative max-w-6xl w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Close Button */}
         <button
@@ -500,7 +565,15 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
                         
                         {/* Comment actions */}
                         <div className="flex items-center space-x-4 mt-1 text-xs">
-                          <button className="text-gray-500 hover:text-red-500 flex items-center space-x-1">
+                          <button 
+                            onClick={() => {
+                              if (!currentUser) {
+                                setSignUpAction('like');
+                                setShowSignUpPrompt(true);
+                              }
+                            }}
+                            className="text-gray-500 hover:text-red-500 flex items-center space-x-1"
+                          >
                             <Heart className="w-3 h-3" />
                             <span>{comment.likes || 0}</span>
                           </button>
@@ -535,7 +608,15 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
                   <Heart className={`w-5 h-5 ${isLiked ? 'fill-current text-red-500' : 'text-gray-600'}`} />
                   <span className="text-sm font-medium text-gray-700">{likeCount.toLocaleString()}</span>
                 </button>
-                <button className="flex items-center space-x-1 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors duration-200">
+                <button 
+                  onClick={() => {
+                    if (!currentUser) {
+                      setSignUpAction('comment');
+                      setShowSignUpPrompt(true);
+                    }
+                  }}
+                  className="flex items-center space-x-1 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                >
                   <MessageCircle className="w-5 h-5 text-gray-600" />
                   <span className="text-sm font-medium text-gray-700">{commentCount}</span>
                 </button>
@@ -562,13 +643,18 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
                 type="text"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Add a comment..."
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
+                placeholder={currentUser ? "Add a comment..." : "Sign up to comment..."}
+                disabled={!currentUser}
+                onClick={!currentUser ? () => {
+                  setSignUpAction('comment');
+                  setShowSignUpPrompt(true);
+                } : undefined}
+                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 disabled:bg-gray-100 disabled:cursor-pointer disabled:text-gray-500"
                 maxLength={280}
               />
               <button 
                 type="submit"
-                disabled={!newComment.trim()}
+                disabled={!newComment.trim() || !currentUser}
                 className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
               >
                 Post
@@ -588,6 +674,12 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
           }}
         />
       )}
+      
+      <SignUpPromptModal
+        isOpen={showSignUpPrompt}
+        onClose={() => setShowSignUpPrompt(false)}
+        action={signUpAction}
+      />
     </div>
   );
 }; 

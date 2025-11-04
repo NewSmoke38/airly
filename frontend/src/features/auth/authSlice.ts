@@ -57,6 +57,7 @@ const authSlice = createSlice({
       saveToLocalStorage(state);
     },
     logout() {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
       return initialState;
     },
     initializeAuth(state: AuthState) {

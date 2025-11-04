@@ -12,14 +12,14 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
+// Public routes - can view comments without authentication (optional auth for better UX)
+router.get("/tweets/:tweetId/comments", getCommentsByTweet);
+router.get("/tweets/:tweetId/comments/count", getCommentCount);
 
-
-
+// Protected routes - require authentication for actions
 router.use(verifyJWT);
 
 router.post("/tweets/:tweetId/comments", createComment);
-router.get("/tweets/:tweetId/comments", getCommentsByTweet);
-router.get("/tweets/:tweetId/comments/count", getCommentCount);
 router.patch("/comments/:commentId", editComment);
 router.delete("/comments/:commentId", deleteComment);
 router.post("/comments/:commentId/like", likeComment);

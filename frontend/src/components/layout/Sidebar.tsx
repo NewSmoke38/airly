@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, User, Upload, Heart, Bookmark, LogOut, Shield } from 'lucide-react';
+import { Home, User, Upload, Heart, Bookmark, LogOut, Shield, LogIn, UserPlus } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '../../store';
@@ -25,7 +25,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const handleLogout = () => {
     dispatch(logout());
-    onCloseMobileMenu(); 
+    onCloseMobileMenu();
+    navigate('/login');
   };
 
   const baseMenuItems = [
@@ -137,39 +138,80 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </nav>
 
-        {/* User Profile */}
+        {/* User Profile / Auth Buttons */}
         <div className="p-4 border-t border-gray-100/50">
-          <div className="flex items-center space-x-3 mb-3">
-            <img
-              src={user?.pfp}
-              alt={user?.fullName}
-              className="w-8 h-8 rounded-full object-cover ring-2 ring-amber-100 flex-shrink-0"
-            />
-            <div
-              className={`
-                transition-opacity duration-300 min-w-0 flex-1
-                ${isMobileMenuOpen || isHovered ? 'opacity-100' : 'opacity-0 lg:opacity-0'}
-              `}
-            >
-              <p className="text-sm font-medium text-gray-900 truncate">{user?.fullName}</p>
-              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+          {user ? (
+            <>
+              <div className="flex items-center space-x-3 mb-3">
+                <img
+                  src={user?.pfp}
+                  alt={user?.fullName}
+                  className="w-8 h-8 rounded-full object-cover ring-2 ring-amber-100 flex-shrink-0"
+                />
+                <div
+                  className={`
+                    transition-opacity duration-300 min-w-0 flex-1
+                    ${isMobileMenuOpen || isHovered ? 'opacity-100' : 'opacity-0 lg:opacity-0'}
+                  `}
+                >
+                  <p className="text-sm font-medium text-gray-900 truncate">{user?.fullName}</p>
+                  <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                </div>
+              </div>
+              
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center space-x-3 px-3 py-2 text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors duration-200 group"
+              >
+                <LogOut className="w-4 h-4 flex-shrink-0 group-hover:scale-105 transition-transform duration-200" />
+                <span
+                  className={`
+                    text-sm font-medium transition-opacity duration-300 whitespace-nowrap
+                    ${isMobileMenuOpen || isHovered ? 'opacity-100' : 'opacity-0 lg:opacity-0'}
+                  `}
+                >
+                  Logout
+                </span>
+              </button>
+            </>
+          ) : (
+            <div className="space-y-2">
+              <button
+                onClick={() => {
+                  navigate('/login');
+                  onCloseMobileMenu();
+                }}
+                className="w-full flex items-center space-x-3 px-3 py-2 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors duration-200 group"
+              >
+                <LogIn className="w-4 h-4 flex-shrink-0 group-hover:scale-105 transition-transform duration-200" />
+                <span
+                  className={`
+                    text-sm font-medium transition-opacity duration-300 whitespace-nowrap
+                    ${isMobileMenuOpen || isHovered ? 'opacity-100' : 'opacity-0 lg:opacity-0'}
+                  `}
+                >
+                  Login
+                </span>
+              </button>
+              <button
+                onClick={() => {
+                  navigate('/signup');
+                  onCloseMobileMenu();
+                }}
+                className="w-full flex items-center space-x-3 px-3 py-2 text-white bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 rounded-xl transition-colors duration-200 group shadow-sm hover:shadow-md"
+              >
+                <UserPlus className="w-4 h-4 flex-shrink-0 group-hover:scale-105 transition-transform duration-200" />
+                <span
+                  className={`
+                    text-sm font-medium transition-opacity duration-300 whitespace-nowrap
+                    ${isMobileMenuOpen || isHovered ? 'opacity-100' : 'opacity-0 lg:opacity-0'}
+                  `}
+                >
+                  Register
+                </span>
+              </button>
             </div>
-          </div>
-          
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-3 py-2 text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors duration-200 group"
-          >
-            <LogOut className="w-4 h-4 flex-shrink-0 group-hover:scale-105 transition-transform duration-200" />
-            <span
-              className={`
-                text-sm font-medium transition-opacity duration-300 whitespace-nowrap
-                ${isMobileMenuOpen || isHovered ? 'opacity-100' : 'opacity-0 lg:opacity-0'}
-              `}
-            >
-              Logout
-            </span>
-          </button>
+          )}
         </div>
       </div>
     </div>
