@@ -2,16 +2,17 @@ import axios from 'axios';
 
 let Prod = true;
 
-const ProdBaseURL = 'https://vibely-3q1i.onrender.com/api/v1';
+const ProdBaseURL = 'https://noncontentious-nonsynchronically-toby.ngrok-free.dev/api/v1';
 const LocalBaseURL = 'http://localhost:8000/api/v1';
 
 const baseURL = Prod ? ProdBaseURL : LocalBaseURL;
 
 const axiosInstance = axios.create({
   baseURL,
-  withCredentials: true, 
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true'
   },
 });
 
@@ -40,24 +41,17 @@ axiosInstance.interceptors.response.use(
   (error) => {
     if (error.response) {
       console.error('API Error:', error.response.data);
-      
-      // Don't redirect to login for GET requests to comment endpoints (public endpoints)
-      const isCommentGetRequest = error.config?.url?.includes('/comments') && error.config?.method === 'get';
-      
-      if (error.response.status === 401 && !isCommentGetRequest) {
+
+      if (error.response.status === 401) {
         localStorage.removeItem('auth');
-        // Only redirect if user was trying to access a protected route
-        const authData = localStorage.getItem('auth');
-        if (authData) {
-          window.location.href = '/login';
-        }
+        window.location.href = '/login';
       }
     } else if (error.request) {
       console.error('No response received:', error.request);
     } else {
       console.error('Request setup error:', error.message);
     }
-    
+
     return Promise.reject(error);
   }
 );
