@@ -1,43 +1,42 @@
 import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken"
-import bcrypt from "bcrypt"           
+import bcrypt from "bcrypt"
 
 const userSchema = new Schema(
-{
+  {
     username: {
-        type: String,
-        required: true,
-        unique: true,
-        lowercase: true,
-        trim: true,
-        index: true,
-        minlength: 1,
-        maxlength: 30
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      minlength: 1,
+      maxlength: 30
     },
     email: {
-        type: String,
-        required: true,
-        unique: true,
-        lowercase: true,
-        trim: true,
-        match: [/^\S+@\S+\.\S+$/, "Please enter a valid email address"]
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [/^\S+@\S+\.\S+$/, "Please enter a valid email address"]
     },
     password: {
-        type: String,
-        required: function() {
-            return !this.googleId; // Password required only if not a Google OAuth user
-        },
-        validate: function(value) {
-            // Skip password validation if this is a Google OAuth user
-            if (this.googleId) return true;
-            // Only validate min/max length for non-Google users
-            return !value || (value.length >= 6 && value.length <= 20);
-        }
+      type: String,
+      required: function () {
+        return !this.googleId; // Password required only if not a Google OAuth user
+      },
+      validate: function (value) {
+        // Skip password validation if this is a Google OAuth user
+        if (this.googleId) return true;
+        // Only validate min/max length for non-Google users
+        return !value || (value.length >= 6 && value.length <= 20);
+      }
     },
     googleId: {
-        type: String,
-        unique: true,
-        sparse: true 
+      type: String,
+      unique: true,
+      sparse: true
     },
     fullName: {
       type: String,
@@ -48,19 +47,19 @@ const userSchema = new Schema(
       maxlength: 30
     },
     pfp: {
-        type: String,     // we will take its url from cloudinary
-        required: true
+      type: String,     // we will take its url from cloudinary
+      required: true
     },
     socials: {
-        twitter: {
+      twitter: {
         type: String
-     },
-        github: { 
+      },
+      github: {
         type: String
-     },
-        linkedin: {
-        type: String 
-     }
+      },
+      linkedin: {
+        type: String
+      }
     },
     refreshToken: {
       type: String,
@@ -71,36 +70,36 @@ const userSchema = new Schema(
       default: "user"
     },
     joinedAt: {
-    type: Date,
-    default: Date.now
+      type: Date,
+      default: Date.now
     },
     // Social features
     followers: [{
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        default: []
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: []
     }],
     following: [{
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        default: []
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: []
     }],
     blockedUsers: [{
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        default: []
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: []
     }],
     bio: {
-        type: String,
-        maxlength: 160,
-        trim: true
+      type: String,
+      maxlength: 160,
+      trim: true
     }
 
-},
+  },
 
-{
+  {
     timestamps: true
-}
+  }
 )
 
 // using bcrypt for hashing passwords
@@ -144,18 +143,16 @@ userSchema.methods.generateRefreshToken = function () {
 };
 
 // for getting (joined at) on a user profile
-userSchema.methods.getJoinedDate = function() {
-    return new Intl.DateTimeFormat('en-US', { 
-        day: 'numeric',
-        month: 'long', 
-        year: 'numeric' 
-    }).format(this.joinedAt);
+userSchema.methods.getJoinedDate = function () {
+  return new Intl.DateTimeFormat('en-US', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }).format(this.joinedAt);
 };
 
-userSchema.index({ email: 1 }); 
-userSchema.index({ role: 1 });  
-userSchema.index({ username: 1 }); 
-userSchema.index({ followers: 1 }); 
-userSchema.index({ following: 1 }); 
+userSchema.index({ role: 1 });
+userSchema.index({ followers: 1 });
+userSchema.index({ following: 1 });
 
 export const User = mongoose.model("User", userSchema)
