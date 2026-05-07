@@ -107,7 +107,12 @@ export const HomePage: React.FC<HomePageProps> = ({
         
         {/* Search Bar */}
         <div className="relative mb-4 sm:mb-6">
-          <Search className="absolute left-3 sm:left-4 top-3 sm:top-4 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+          <div className="absolute inset-y-0 left-3 sm:left-4 flex items-center pointer-events-none">
+            <Search
+              className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400"
+              strokeWidth={2.25}
+            />
+          </div>
           <input
             type="text"
             value={searchQuery}

@@ -43,6 +43,29 @@ export const DashboardPage: React.FC = () => {
   const [isSubmittingDelete, setIsSubmittingDelete] = useState(false);
   const selectedPostRef = useRef<Post | null>(null);
 
+  useEffect(() => {
+    const warmupToastId = toast(
+      "You're amazing! Give us about 20 seconds to get everything ready for you.",
+      {
+        duration: 22000,
+        position: 'bottom-center',
+        style: {
+          background: '#fff7ed',
+          color: '#c2410c',
+          border: '1px solid #fdba74',
+          borderRadius: '10px',
+          fontSize: '13px',
+          padding: '10px 12px',
+          maxWidth: '320px',
+        },
+      }
+    );
+
+    return () => {
+      toast.dismiss(warmupToastId);
+    };
+  }, []);
+
 
   const fetchPosts = async (tag?: string, sort?: string) => {
     try {

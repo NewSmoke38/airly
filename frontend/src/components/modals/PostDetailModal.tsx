@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Heart, MessageCircle, Share, Bookmark, MoreHorizontal, ArrowLeft, ArrowRight, Eye, Link, Flag, UserMinus, UserX, Pencil, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Post } from '../../types';
@@ -6,6 +6,7 @@ import { tweetService } from '../../services/tweetService';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { SignUpPromptModal } from './SignUpPromptModal';
+import { formatDateShort } from '../../utils/dateFormat';
 
 interface PostDetailModalProps {
   post: Post;
@@ -59,13 +60,46 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
   const [commentCount, setCommentCount] = useState(post.comments || 0);
   const [showSignUpPrompt, setShowSignUpPrompt] = useState(false);
   const [signUpAction, setSignUpAction] = useState<'like' | 'comment'>('like');
-  const modalRef = useRef<HTMLDivElement>(null);
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const isOwner = currentUser && post.user && currentUser._id === post.user._id;
 
   const userHandle = post.user?.username || post.author?.name?.toLowerCase().replace(/\s+/g, '') || 'user';
   const postId = post._id || post.id;
+  const asRecord = (value: unknown): Record<string, unknown> | null => {
+    if (!value || typeof value !== 'object') return null;
+    return value as Record<string, unknown>;
+  };
+
+  const extractComments = (value: unknown): Comment[] => {
+    if (Array.isArray(value)) return value as Comment[];
+
+    const directRecord = asRecord(value);
+    if (!directRecord) return [];
+
+    const directComments = directRecord.comments;
+    if (Array.isArray(directComments)) return directComments as Comment[];
+
+    const nestedRecord = asRecord(directRecord.data);
+    const nestedComments = nestedRecord?.comments;
+    if (Array.isArray(nestedComments)) return nestedComments as Comment[];
+
+    return [];
+  };
+
+  const extractCount = (value: unknown): number => {
+    if (typeof value === 'number') return value;
+
+    const directRecord = asRecord(value);
+    const directCount = directRecord?.count;
+    if (typeof directCount === 'number') return directCount;
+
+    const nestedRecord = asRecord(directRecord?.data);
+    const nestedCount = nestedRecord?.count;
+    if (typeof nestedCount === 'number') return nestedCount;
+
+    return 0;
+  };
 
   useEffect(() => {
     if (postId) {
@@ -90,37 +124,13 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
         })
       ]);
       
-      // Service returns response.data.data which unwraps to { comments: [...], hasMore, nextCursor } or { count: number }
-      // Handle both wrapped and unwrapped response structures
-      let commentsData = [];
-      if (commentsResponse) {
-        if (Array.isArray(commentsResponse)) {
-          // Direct array response
-          commentsData = commentsResponse;
-        } else if (commentsResponse.comments) {
-          // Unwrapped structure { comments: [...], hasMore, nextCursor }
-          commentsData = commentsResponse.comments;
-        } else if (commentsResponse.data?.comments) {
-          // Double-wrapped structure
-          commentsData = commentsResponse.data.comments;
-        }
-      }
-      
-      let countData = 0;
-      if (countResponse) {
-        if (typeof countResponse === 'number') {
-          countData = countResponse;
-        } else if (countResponse.count !== undefined) {
-          countData = countResponse.count;
-        } else if (countResponse.data?.count !== undefined) {
-          countData = countResponse.data.count;
-        }
-      }
+      const commentsData = extractComments(commentsResponse);
+      const countData = extractCount(countResponse);
       
       // Fallback: use comments array length if count is 0 but we have comments
       const actualCommentCount = countData > 0 ? countData : (commentsData.length || 0);
       
-      setComments(Array.isArray(commentsData) ? commentsData : []);
+      setComments(commentsData);
       setCommentCount(actualCommentCount);
       
       if (onPostUpdate && actualCommentCount !== post.comments) {
@@ -296,7 +306,7 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
           setComments(prev => [newCommentData, ...prev]);
           try {
             const countResponse = await tweetService.getCommentCount(postId);
-            const actualCommentCount = countResponse.count || countResponse.data?.count || 0;
+            const actualCommentCount = extractCount(countResponse);
             setCommentCount(actualCommentCount);
             
             if (onPostUpdate) {
@@ -319,7 +329,7 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
           }
         }
         
-      } catch (error: any) {
+      } catch (error) {
         console.error('Failed to post comment:', error);
       }
     }
@@ -387,10 +397,10 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
           </div>
           
           {/* Views Counter Overlay */}
-          {post.views && post.views > 0 && (
+          {(post.views ?? 0) > 0 && (
             <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-lg text-sm flex items-center space-x-2 backdrop-blur-sm">
               <Eye className="w-4 h-4" />
-              <span>{post.views.toLocaleString()} views</span>
+              <span>{(post.views ?? 0).toLocaleString()} views</span>
             </div>
           )}
         </div>
@@ -520,13 +530,13 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
 
               {/* Stats */}
               <div className="flex items-center text-sm text-gray-500 mb-4 space-x-4">
-                <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-                {post.views && post.views > 0 && (
+                <span>{formatDateShort(post.createdAt)}</span>
+                {(post.views ?? 0) > 0 && (
                   <>
                     <span>•</span>
                     <div className="flex items-center space-x-1">
                       <Eye className="w-4 h-4" />
-                      <span>{post.views.toLocaleString()} views</span>
+                      <span>{(post.views ?? 0).toLocaleString()} views</span>
                     </div>
                   </>
                 )}
@@ -557,7 +567,7 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
                             <span className="text-xs text-gray-500">@{comment.user.username}</span>
                             <span className="text-xs text-gray-500">•</span>
                             <span className="text-xs text-gray-500">
-                              {new Date(comment.createdAt).toLocaleDateString()}
+                              {formatDateShort(comment.createdAt)}
                             </span>
                           </div>
                           <p className="text-sm text-gray-700 leading-relaxed">{comment.content}</p>
@@ -575,7 +585,7 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
                             className="text-gray-500 hover:text-red-500 flex items-center space-x-1"
                           >
                             <Heart className="w-3 h-3" />
-                            <span>{comment.likes || 0}</span>
+                            <span>{comment.likes && comment.likes > 0 ? comment.likes : 'Like'}</span>
                           </button>
                           <button className="text-gray-500 hover:text-blue-500">
                             Reply
@@ -606,7 +616,9 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
                   className={`flex items-center space-x-1 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors duration-200 ${isLiked ? 'text-red-500' : ''}`}
                 >
                   <Heart className={`w-5 h-5 ${isLiked ? 'fill-current text-red-500' : 'text-gray-600'}`} />
-                  <span className="text-sm font-medium text-gray-700">{likeCount.toLocaleString()}</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {likeCount > 0 ? `${likeCount.toLocaleString()} likes` : 'Like'}
+                  </span>
                 </button>
                 <button 
                   onClick={() => {
@@ -618,7 +630,9 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
                   className="flex items-center space-x-1 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
                 >
                   <MessageCircle className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">{commentCount}</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {commentCount > 0 ? `${commentCount} comments` : 'Comment'}
+                  </span>
                 </button>
               </div>
               <div className="flex items-center space-x-2">

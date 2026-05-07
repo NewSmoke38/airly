@@ -7,6 +7,7 @@ import { tweetService } from '../../services/tweetService';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { SignUpPromptModal } from '../modals/SignUpPromptModal';
+import { formatDateShort } from '../../utils/dateFormat';
 
 interface PostDetailPageProps {
   post: Post;
@@ -149,7 +150,7 @@ export const PostDetailPage: React.FC<PostDetailPageProps> = ({ post, onEditPost
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-base sm:text-lg text-gray-900 truncate">{post.user.fullName}</h3>
                 <p className="text-sm sm:text-base text-gray-500 truncate">@{post.user.username}</p>
-                <p className="text-xs sm:text-sm text-gray-500">{new Date(post.createdAt).toLocaleDateString()}</p>
+                <p className="text-xs sm:text-sm text-gray-500">{formatDateShort(post.createdAt)}</p>
               </div>
             </div>
           )}

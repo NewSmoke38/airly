@@ -10,6 +10,7 @@ import {
   BarChart3,
 } from 'lucide-react';
 import { adminService, AnalyticsData, PaginatedUsers, User } from '../../services/adminService';
+import { formatDateShort } from '../../utils/dateFormat';
 
 interface StatCardProps {
   title: string;
@@ -54,7 +55,7 @@ const ChartCard: React.FC<ChartCardProps> = ({ title, data, color }) => {
         {data.map((item, index) => (
           <div key={index} className="flex items-center justify-between">
             <span className="text-sm text-gray-600">
-              {new Date(item._id).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+              {formatDateShort(item._id)}
             </span>
             <div className="flex items-center space-x-2">
               <div className="w-24 bg-gray-200 rounded-full h-2">
@@ -100,7 +101,7 @@ const UserRow: React.FC<UserRowProps> = ({ user, onEdit, onDelete }) => (
       </span>
     </td>
     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-      {new Date(user.createdAt).toLocaleDateString()}
+      {formatDateShort(user.createdAt)}
     </td>
     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
       {user.followers?.length || 0}
