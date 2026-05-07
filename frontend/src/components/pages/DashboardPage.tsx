@@ -45,9 +45,9 @@ export const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     const warmupToastId = toast(
-      "You're amazing! Give us about 20 seconds to get everything ready for you.",
+      "You're amazing! Give us about 25 seconds to get everything ready for you.",
       {
-        duration: 22000,
+        duration: 35000,
         position: 'bottom-center',
         style: {
           background: '#fff7ed',
